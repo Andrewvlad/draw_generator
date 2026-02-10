@@ -29,8 +29,12 @@ const main = (
 
             const [randomPoint] = randomItem(pool);
 
-            curPoints = curPoints + (Number.isInteger(randomPoint) ? 2 : 1); // 1 point for randoms, 2 for blocks
-            ret[0].push(randomPoint); // Add to latest dive-flow
+            if (!ret[0].includes(randomPoint)) { // Check if point already used within this dive
+                ret[0].push(randomPoint); // Add point to latest dive-flow
+                curPoints = curPoints + (Number.isInteger(randomPoint) ? 2 : 1); // 1 point for randoms, 2 for blocks
+            } else {
+                pool.push(randomPoint); // Add point back to the pool
+            }
         }
     }
 
