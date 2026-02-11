@@ -20,8 +20,12 @@
     <input id="numDives" type="number" min="1" max="100" value="10" required>
     <br>
 
-    <label for="minPoints">Number of points:</label>
-    <input id="minPoints" type="number" min="1" max="10" value="3" required>
+    <label for="points">Number of points:</label>
+    <select id="points">
+        <option value="3">3 - 4</option>
+        <option value="4">4 - 5</option>
+        <option value="5">5 - 6</option>
+    </select>
     <br>
 
     <button type="button" onclick="addToPage()">Generate dives</button>
@@ -33,7 +37,7 @@
 <script>
     function addToPage(pageElement = "dives") {
         const numDives = document.getElementById("numDives");
-        const minPoints = document.getElementById("minPoints");
+        const minPoints = document.getElementById("points");
 
         if (numDives.checkValidity() && minPoints.checkValidity()) {
             document.getElementById(pageElement).innerHTML =
