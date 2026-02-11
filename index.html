@@ -8,14 +8,15 @@
 
 <!--Content-->
 <h1>FS Dive Generator</h1>
-<p id="dives"></p>
+<ol id="dives" style = "font-family: 'Courier New', monospace;"></ol>
 <button type="button" onclick="addToPage()">Generate dives</button>
 
 <!--Scripts-->
 <script src="index.js"></script>
 <script>
-    function addToPage(pageElement = "dives", vals) {
-        document.getElementById(pageElement).innerHTML = main(vals).join("<br>")
+    function addToPage(pageElement = "dives", props) {
+        document.getElementById(pageElement).innerHTML =
+            main(props).map((dive) => `<li>${dive.join(', ')}</li>`).join('')
     }
 </script>
 <script>window.addEventListener('load', () => addToPage(), {once: true});</script>
