@@ -40,5 +40,3 @@ const main = (
 
     return ret;
 };
-
-console.log(main());

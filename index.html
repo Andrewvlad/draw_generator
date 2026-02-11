@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FS Dive Generator</title>
+</head>
+<body>
+
+<!--Content-->
+<h1>FS Dive Generator</h1>
+<p id="dives"></p>
+<button type="button" onclick="addToPage()">Generate dives</button>
+
+<!--Scripts-->
+<script src="index.js"></script>
+<script>
+    function addToPage(pageElement = "dives", vals) {
+        document.getElementById(pageElement).innerHTML = main(vals).join("<br>")
+    }
+</script>
+<script>window.addEventListener('load', () => addToPage(), {once: true});</script>
+<noscript>To use this tool, please enable JavaScript.</noscript>
+
+</body>
+</html>
+
