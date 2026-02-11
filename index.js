@@ -13,18 +13,22 @@ const randomItem = (arr) => arr.splice(Math.floor(Math.random() * arr.length), 1
 const main = ({
     numDives = 10,
     minPoints = 3,
+    useRandoms = true,
+    useBlocks = true,
 }) => {
     const dives = [];
-
-    let pool = [...randoms, ...blocks];
+    let pool = [];
 
     while (dives.length < numDives) {
         let curPoints = 0;
         const newDive = [];
 
         while (curPoints < minPoints) {
-            if (!pool.length) { // Regenerate empty pool
-                pool = [...randoms, ...blocks];
+            if (!pool.length) { // Fill empty pool
+                pool = [
+                    ...useRandoms ? randoms : [],
+                    ...useBlocks ? blocks : [],
+                ];
             }
 
             const [randomPoint] = randomItem(pool);

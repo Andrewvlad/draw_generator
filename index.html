@@ -28,6 +28,17 @@
     </select>
     <br>
 
+    <div>
+        <input type="radio" id="blocksAndRandoms" name="blocksAndRandoms" value="{}" checked/>
+        <label for="blocksAndRandoms">Randoms & Blocks</label>
+
+        <input type="radio" id="onlyRandoms" name="blocksAndRandoms" value='{"useBlocks":false}'/>
+        <label for="onlyRandoms">Only Randoms</label>
+
+        <input type="radio" id="onlyBlocks" name="blocksAndRandoms" value='{"useRandoms":false}'/>
+        <label for="onlyBlocks">Only Blocks</label>
+    </div>
+
     <button type="button" onclick="addToPage()">Generate dives</button>
     <button type="button" onclick="copyToClipboard()">Copy dives to clipboard</button>
 </form>
@@ -44,7 +55,8 @@
             document.getElementById(pageElement).innerHTML =
                 main({
                     numDives: numDives.value,
-                    minPoints: minPoints.value
+                    minPoints: minPoints.value,
+                    ...JSON.parse(document.querySelector('input[name="blocksAndRandoms"]:checked').value),
                 }).map((dive) => `<li>${dive.join(', ')}</li>`).join('')
         }
     }
