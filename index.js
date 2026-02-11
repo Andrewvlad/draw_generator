@@ -19,8 +19,8 @@ const main = (
     let pool = [...randoms, ...blocks];
 
     while (dives.length < numDives) {
-        dives.unshift([]); // Add empty dive-flow to start
         let curPoints = 0;
+        const newDive = [];
 
         while (curPoints < minPoints) {
             if (!pool.length) { // Regenerate empty pool
@@ -29,13 +29,15 @@ const main = (
 
             const [randomPoint] = randomItem(pool);
 
-            if (!dives[0].includes(randomPoint)) { // Check if point already used within this dive
-                dives[0].push(randomPoint); // Add point to latest dive-flow
+            if (!newDive.includes(randomPoint)) { // Check if point already used within this dive
+                newDive.push(randomPoint); // Add point to latest dive-flow
                 curPoints = curPoints + (Number.isInteger(randomPoint) ? 2 : 1); // 1 point for randoms, 2 for blocks
             } else {
                 pool.push(randomPoint); // Add point back to the pool
             }
         }
+
+        dives.push(newDive);
     }
 
     return dives;
