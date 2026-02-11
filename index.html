@@ -42,7 +42,10 @@
 
         if (numDives.checkValidity() && minPoints.checkValidity()) {
             document.getElementById(pageElement).innerHTML =
-                main(numDives.value, minPoints.value).map((dive) => `<li>${dive.join(', ')}</li>`).join('')
+                main({
+                    numDives: numDives.value,
+                    minPoints: minPoints.value
+                }).map((dive) => `<li>${dive.join(', ')}</li>`).join('')
         }
     }
     addToPage()

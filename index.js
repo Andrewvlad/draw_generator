@@ -10,10 +10,10 @@ const blocks = Array.from({length: 22}, (_, i) => i + 1);
 // Pop a random value from the array
 const randomItem = (arr) => arr.splice(Math.floor(Math.random() * arr.length), 1);
 
-const main = (
+const main = ({
     numDives = 10,
     minPoints = 3,
-) => {
+}) => {
     const dives = [];
 
     let pool = [...randoms, ...blocks];
