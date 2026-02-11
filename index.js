@@ -11,15 +11,15 @@ const blocks = Array.from({length: 22}, (_, i) => i + 1);
 const randomItem = (arr) => arr.splice(Math.floor(Math.random() * arr.length), 1);
 
 const main = (
-    dives = 10,
+    numDives = 10,
     minPoints = 3,
 ) => {
-    const ret = [];
+    const dives = [];
 
     let pool = [...randoms, ...blocks];
 
-    while (ret.length < dives) {
-        ret.unshift([]); // Add empty dive-flow to start
+    while (dives.length < numDives) {
+        dives.unshift([]); // Add empty dive-flow to start
         let curPoints = 0;
 
         while (curPoints < minPoints) {
@@ -29,8 +29,8 @@ const main = (
 
             const [randomPoint] = randomItem(pool);
 
-            if (!ret[0].includes(randomPoint)) { // Check if point already used within this dive
-                ret[0].push(randomPoint); // Add point to latest dive-flow
+            if (!dives[0].includes(randomPoint)) { // Check if point already used within this dive
+                dives[0].push(randomPoint); // Add point to latest dive-flow
                 curPoints = curPoints + (Number.isInteger(randomPoint) ? 2 : 1); // 1 point for randoms, 2 for blocks
             } else {
                 pool.push(randomPoint); // Add point back to the pool
@@ -38,5 +38,5 @@ const main = (
         }
     }
 
-    return ret;
+    return dives;
 };

@@ -9,14 +9,29 @@
 <!--Content-->
 <h1>FS Dive Generator</h1>
 <ol id="dives" style = "font-family: 'Courier New', monospace;"></ol>
-<button type="button" onclick="addToPage()">Generate dives</button>
+
+<form id="form1">
+    <label for="numDives">Number of dives:</label>
+    <input id="numDives" type="number" min="0" max="100" value="10">
+    <br>
+
+    <label for="minPoints">Number of points:</label>
+    <input id="minPoints" type="number" min="0" max="100" value="3">
+    <br>
+
+    <button type="button" onclick="addToPage()">Generate dives</button>
+</form>
+
 
 <!--Scripts-->
 <script src="index.js"></script>
 <script>
-    function addToPage(pageElement = "dives", props) {
+    function addToPage(pageElement = "dives") {
         document.getElementById(pageElement).innerHTML =
-            main(props).map((dive) => `<li>${dive.join(', ')}</li>`).join('')
+            main(
+                document.getElementById('numDives').value,
+                document.getElementById('minPoints').value,
+            ).map((dive) => `<li>${dive.join(', ')}</li>`).join('')
     }
 </script>
 <script>window.addEventListener('load', () => addToPage(), {once: true});</script>
