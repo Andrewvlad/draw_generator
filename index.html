@@ -3,6 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title>FS Dive Generator</title>
+    <style>
+        input:invalid {
+            border: 2px solid red;
+        }
+    </style>
 </head>
 <body>
 
@@ -12,11 +17,11 @@
 
 <form id="form1">
     <label for="numDives">Number of dives:</label>
-    <input id="numDives" type="number" min="0" max="100" value="10">
+    <input id="numDives" type="number" min="1" max="100" value="10" required>
     <br>
 
     <label for="minPoints">Number of points:</label>
-    <input id="minPoints" type="number" min="0" max="100" value="3">
+    <input id="minPoints" type="number" min="1" max="10" value="3" required>
     <br>
 
     <button type="button" onclick="addToPage()">Generate dives</button>
@@ -27,11 +32,13 @@
 <script src="index.js"></script>
 <script>
     function addToPage(pageElement = "dives") {
-        document.getElementById(pageElement).innerHTML =
-            main(
-                document.getElementById('numDives').value,
-                document.getElementById('minPoints').value,
-            ).map((dive) => `<li>${dive.join(', ')}</li>`).join('')
+        const numDives = document.getElementById("numDives");
+        const minPoints = document.getElementById("minPoints");
+
+        if (numDives.checkValidity() && minPoints.checkValidity()) {
+            document.getElementById(pageElement).innerHTML =
+                main(numDives.value, minPoints.value).map((dive) => `<li>${dive.join(', ')}</li>`).join('')
+        }
     }
     addToPage()
 </script>
