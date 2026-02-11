@@ -15,7 +15,7 @@
 <h1>FS Dive Generator</h1>
 <ol id="dives" style = "font-family: 'Courier New', monospace;"></ol>
 
-<form id="form1">
+<form>
     <label for="numDives">Number of dives:</label>
     <input id="numDives" type="number" min="1" max="100" value="10" required>
     <br>
@@ -29,6 +29,7 @@
     <br>
 
     <button type="button" onclick="addToPage()">Generate dives</button>
+    <button type="button" onclick="copyToClipboard()">Copy dives to clipboard</button>
 </form>
 
 
@@ -45,6 +46,11 @@
         }
     }
     addToPage()
+</script>
+<script>
+    function copyToClipboard(pageElement = "dives") {
+        navigator.clipboard.writeText(document.getElementById(pageElement).innerText)
+    }
 </script>
 <noscript>To use this tool, please enable JavaScript.</noscript>
 
