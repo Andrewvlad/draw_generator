@@ -32,12 +32,9 @@ const main = ({
 
         while (curPoints < minPoints) {
             // Restart if it is impossible to use a unique exit
-            if (uniqueExits && !newDive.length && exits.isSupersetOf(new Set(pool)) && pool.length) {
+            if (uniqueExits && !newDive.length && pool.length && exits.isSupersetOf(new Set(pool))) {
                 dives = [];
-                pool = pool = [
-                    ...useRandoms ? randoms : [],
-                    ...useBlocks ? blocks : [],
-                ];
+                pool = [];
                 newDive = [];
                 curPoints = 0;
                 exits = new Set();
@@ -54,15 +51,23 @@ const main = ({
 
             const [randomPoint] = randomItem(pool);
 
+            // If exit has already been used
             if (uniqueExits && !newDive.length && exits.has(randomPoint)) {
-                pool.push(randomPoint); // Add point back to the pool
-            } else if (newDive.includes(randomPoint)) {
-                pool.push(randomPoint); // Add point back to the pool
-            } else {
-                if (!newDive.length) exits.add(randomPoint);
-                newDive.push(randomPoint); // Add point to latest dive-flow
-                curPoints = curPoints + (Number.isInteger(randomPoint) ? 2 : 1); // 1 point for randoms, 2 for blocks
+                pool.push(randomPoint); // Return point back to the pool
+                continue;
             }
+
+            // If point has already been used in this dive
+            if (newDive.includes(randomPoint)) {
+                pool.push(randomPoint); // Return point back to the pool
+                continue;
+            }
+
+            // Add exit
+            if (!newDive.length) exits.add(randomPoint);
+
+            newDive.push(randomPoint);
+            curPoints = curPoints + (Number.isInteger(randomPoint) ? 2 : 1); // 1 point for randoms, 2 for blocks
         }
 
         dives.push(newDive);
