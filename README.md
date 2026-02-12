@@ -1,7 +1,7 @@
 # FS Draw Generator
 
 This is a random draw generator from the competitive skydiving pool of randoms and blocks.
-Points for each dive are drawn from the pool until empty, and then the pool reset.
+Points for each dive are drawn from the pool until empty, and then the pool resets.
 Hosted [here](https://andrewvlad.github.io/draw_generator/) on GitHub.
 
 ## Options
@@ -16,8 +16,9 @@ Hosted [here](https://andrewvlad.github.io/draw_generator/) on GitHub.
 - Copy to clipboard
 - No duplicate points within the same dive
 
-## To Do
+## TODO
 - [x] Unique exits
 - [ ] Unique transitions
-- [ ] Add images
-- [ ] Add different dive pools
+- [ ] Images
+- [ ] Different dive pools
+- [ ] Different disciplines
