@@ -8,6 +8,7 @@ Hosted [here](https://andrewvlad.github.io/draw_generator/) on GitHub.
 - Number of dives
 - Number of points
 - Randoms and/or blocks
+- Unique exits
 
 ## Features
 - Instant generation
@@ -16,7 +17,7 @@ Hosted [here](https://andrewvlad.github.io/draw_generator/) on GitHub.
 - No duplicate points within the same dive
 
 ## To Do
-- [ ] Unique exits
+- [x] Unique exits
 - [ ] Unique transitions
 - [ ] Add images
 - [ ] Add different dive pools

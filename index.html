@@ -39,6 +39,10 @@
         <label for="onlyBlocks">Only Blocks</label>
     </div>
 
+    <input type="checkbox" id="uniqueExits">
+    <label for="uniqueExits">Unique Exits</label>
+    <br>
+
     <button type="button" onclick="addToPage()">Generate dives</button>
     <button type="button" onclick="copyToClipboard()">Copy dives to clipboard</button>
 </form>
@@ -50,12 +54,14 @@
     function addToPage(pageElement = "dives") {
         const numDives = document.getElementById("numDives");
         const minPoints = document.getElementById("points");
+        const uniqueExits = document.getElementById("uniqueExits");
 
         if (numDives.checkValidity() && minPoints.checkValidity()) {
             document.getElementById(pageElement).innerHTML =
                 main({
                     numDives: numDives.value,
                     minPoints: minPoints.value,
+                    uniqueExits: uniqueExits.checked,
                     ...JSON.parse(document.querySelector('input[name="blocksAndRandoms"]:checked').value),
                 });
         }

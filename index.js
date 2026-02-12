@@ -18,31 +18,50 @@ const listDives = (arr) => "<ol>"
 const main = ({
     numDives = 10,
     minPoints = 3,
+    uniqueExits = false,
     useRandoms = true,
     useBlocks = true,
 }) => {
-    const dives = [];
+    let dives = [];
+    let exits = new Set();
     let pool = [];
 
     while (dives.length < numDives) {
         let curPoints = 0;
-        const newDive = [];
+        let newDive = [];
 
         while (curPoints < minPoints) {
-            if (!pool.length) { // Fill empty pool
+            // Restart if it is impossible to use a unique exit
+            if (uniqueExits && !newDive.length && exits.isSupersetOf(new Set(pool)) && pool.length) {
+                dives = [];
+                pool = pool = [
+                    ...useRandoms ? randoms : [],
+                    ...useBlocks ? blocks : [],
+                ];
+                newDive = [];
+                curPoints = 0;
+                exits = new Set();
+            }
+
+            // Fill empty pool
+            if (!pool.length) {
                 pool = [
                     ...useRandoms ? randoms : [],
                     ...useBlocks ? blocks : [],
                 ];
+                if (uniqueExits && pool.length < numDives) return "Number of dives exceeds the amount of unique exits";
             }
 
             const [randomPoint] = randomItem(pool);
 
-            if (!newDive.includes(randomPoint)) { // Check if point already used within this dive
+            if (uniqueExits && !newDive.length && exits.has(randomPoint)) {
+                pool.push(randomPoint); // Add point back to the pool
+            } else if (newDive.includes(randomPoint)) {
+                pool.push(randomPoint); // Add point back to the pool
+            } else {
+                if (!newDive.length) exits.add(randomPoint);
                 newDive.push(randomPoint); // Add point to latest dive-flow
                 curPoints = curPoints + (Number.isInteger(randomPoint) ? 2 : 1); // 1 point for randoms, 2 for blocks
-            } else {
-                pool.push(randomPoint); // Add point back to the pool
             }
         }
 
