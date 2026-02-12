@@ -13,7 +13,7 @@
 
 <!--Content-->
 <h1>FS Dive Generator</h1>
-<ol id="dives" style = "font-family: 'Courier New', monospace;"></ol>
+<div id="dives" style = "font-family: 'Courier New', monospace;"></div>
 
 <form>
     <label for="numDives">Number of dives:</label>
@@ -57,10 +57,10 @@
                     numDives: numDives.value,
                     minPoints: minPoints.value,
                     ...JSON.parse(document.querySelector('input[name="blocksAndRandoms"]:checked').value),
-                }).map((dive) => `<li>${dive.join(', ')}</li>`).join('')
+                });
         }
     }
-    addToPage()
+    addToPage();
 </script>
 <script>
     function copyToClipboard(pageElement = "dives") {
