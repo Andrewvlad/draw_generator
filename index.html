@@ -47,11 +47,11 @@
 <!--Scripts-->
 <script src="index.js"></script>
 <script>
-    function addToPage(pageElement = "dives") {
-        const numDives = document.getElementById("numDives");
-        const minPoints = document.getElementById("points");
-        const uniqueExits = document.getElementById("uniqueExits");
+    const numDives = document.getElementById("numDives");
+    const minPoints = document.getElementById("points");
+    const uniqueExits = document.getElementById("uniqueExits");
 
+    function addToPage(pageElement = "dives") {
         if (numDives.checkValidity() && minPoints.checkValidity()) {
             document.getElementById(pageElement).innerHTML =
                 main({
