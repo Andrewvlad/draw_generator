@@ -43,6 +43,8 @@
     <button type="button" onclick="copyToClipboard()">Copy dives to clipboard</button>
 </form>
 
+<div id="copyClipboardToast" class="toast">Copied to clipboard</div>
+
 
 <!--Scripts-->
 <script src="index.js"></script>
@@ -65,8 +67,26 @@
     addToPage();
 </script>
 <script>
+    const toast = document.getElementById("copyClipboardToast");
+    let toastTimeout;
+
+    // Reset animation by removing and re-adding the class
+    function refreshToast() {
+        toast.classList.remove("show");
+        toast.classList.add('noTransition'); // Disable transitions
+        toast.offsetHeight; // Trigger a reflow, flushing the CSS changes
+        toast.classList.remove('noTransition'); // Re-enable transitions
+        toast.classList.add("show");
+
+        clearTimeout(toastTimeout); // Clear existing timeout, if any
+    }
+
     function copyToClipboard(pageElement = "dives") {
-        navigator.clipboard.writeText(document.getElementById(pageElement).innerText)
+        navigator.clipboard.writeText(document.getElementById(pageElement).innerText);
+
+        // Display a toast notification
+        refreshToast();
+        toastTimeout = setTimeout(() => toast.classList.remove("show"), 1250);
     }
 </script>
 <noscript>To use this tool, please enable JavaScript.</noscript>
