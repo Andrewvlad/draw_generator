@@ -11,6 +11,39 @@ input:invalid {
     font-family: 'Courier New', monospace;
 }
 
+#diveImages > div::before {
+    content: counter(dive-number);
+    font-size: 40px;
+    color: var(--background);
+    background: var(--foreground);
+    min-width: 50px;
+    text-align: center;
+    border-radius: 50%;
+}
+
+#diveImages > div {
+    display: flex;
+    align-items: center;
+    height: 242px;
+    max-width: 675px;
+    counter-increment: dive-number;
+    border-bottom: 1px solid black;
+}
+
+#diveImages > div:last-child {
+    border: none;
+}
+
+#diveImages > div > img {
+    min-width: 0;
+    background: white;
+    object-fit: scale-down;
+    height: auto;
+    max-height: 240px;
+    margin: 0 auto;
+    border-radius: 10px;
+}
+
 @media (prefers-color-scheme: dark) {
     :root {
         --background: #151515;

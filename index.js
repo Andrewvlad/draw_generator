@@ -15,6 +15,10 @@ const listDives = (arr) => "<ol>"
     + (arr.map(dive => `<li>${dive.join(', ')}</li>`)).join('')
     + "</ol>";
 
+const divesAsImages = (arr) => (arr.map(dive =>
+        `<div>${dive.map(point => `<img src="${imagePaths[point]}" class="diagram" alt="${point}">`).join('')}</div>`
+    )).join('');
+
 const main = ({
     numDives = 10,
     minPoints = 3,

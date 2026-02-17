@@ -43,10 +43,13 @@
     <button type="button" onclick="copyToClipboard()">Copy dives to clipboard</button>
 </form>
 
+<div id="diveImages"></div>
+
 <div id="copyClipboardToast" class="toast">Copied to clipboard</div>
 
 
 <!--Scripts-->
+<script src="assets/diagrams/4-way_fs/rhythm/index.js"></script> <!--Load all images-->
 <script src="index.js"></script>
 <script>
     let generatedDives;
@@ -63,6 +66,7 @@
                 ...JSON.parse(document.querySelector('input[name="blocksAndRandoms"]:checked').value),
             });
             document.getElementById("dives").innerHTML = listDives(generatedDives);
+            document.getElementById("diveImages").innerHTML = divesAsImages(generatedDives);
         }
     }
     addToPage();
@@ -94,4 +98,3 @@
 
 </body>
 </html>
-
