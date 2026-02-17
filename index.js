@@ -12,7 +12,7 @@ const randomItem = (arr) => arr.splice(Math.floor(Math.random() * arr.length), 1
 
 // For HTML display
 const listDives = (arr) => "<ol>"
-    + (arr.map((dive) => `<li>${dive.join(', ')}</li>`)).join('')
+    + (arr.map(dive => `<li>${dive.join(', ')}</li>`)).join('')
     + "</ol>";
 
 const main = ({
@@ -73,5 +73,5 @@ const main = ({
         dives.push(newDive);
     }
 
-    return listDives(dives);
+    return dives;
 };

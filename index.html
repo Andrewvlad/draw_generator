@@ -49,19 +49,20 @@
 <!--Scripts-->
 <script src="index.js"></script>
 <script>
+    let generatedDives;
     const numDives = document.getElementById("numDives");
     const minPoints = document.getElementById("points");
     const uniqueExits = document.getElementById("uniqueExits");
 
     function addToPage(pageElement = "dives") {
         if (numDives.checkValidity() && minPoints.checkValidity()) {
-            document.getElementById(pageElement).innerHTML =
-                main({
-                    numDives: numDives.value,
-                    minPoints: minPoints.value,
-                    uniqueExits: uniqueExits.checked,
-                    ...JSON.parse(document.querySelector('input[name="blocksAndRandoms"]:checked').value),
-                });
+            generatedDives = main({
+                numDives: numDives.value,
+                minPoints: minPoints.value,
+                uniqueExits: uniqueExits.checked,
+                ...JSON.parse(document.querySelector('input[name="blocksAndRandoms"]:checked').value),
+            });
+            document.getElementById(pageElement).innerHTML = listDives(generatedDives);
         }
     }
     addToPage();
