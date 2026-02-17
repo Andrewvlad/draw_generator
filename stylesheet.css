@@ -81,3 +81,19 @@ body {
     color: var(--foreground);
     font-family: Arial, Helvetica, sans-serif;
 }
+
+@media print {
+    body *:not(.toPrint) {
+        display: none
+    }
+
+    /* Show element to print, and any children */
+    #diveImages * {
+        display: flex;
+    }
+
+    #diveImages div:nth-child(4n) {
+        page-break-after: always;
+        border: none;
+    }
+}

@@ -41,9 +41,10 @@
 
     <button type="button" onclick="addToPage()">Generate dives</button>
     <button type="button" onclick="copyToClipboard()">Copy dives to clipboard</button>
+    <button type="button" onclick="window.print()">Save dives as a PDF</button>
 </form>
 
-<div id="diveImages"></div>
+<div id="diveImages" class="toPrint"></div>
 
 <div id="copyClipboardToast" class="toast">Copied to clipboard</div>
 
