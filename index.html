@@ -39,9 +39,13 @@
     <label for="uniqueExits">Unique Exits</label>
     <br>
 
+    <input type="checkbox" id="showImage">
+    <label for="showImage">Display images below (forces light-mode)</label>
+    <br>
+
     <button type="button" onclick="addToPage()">Generate dives</button>
     <button type="button" onclick="copyToClipboard()">Copy dives to clipboard</button>
-    <button type="button" onclick="window.print()">Save dives as a PDF</button>
+    <button type="button" onclick="window.print()">Save dives as PDF</button>
 </form>
 
 <div id="diveImages" class="toPrint"></div>

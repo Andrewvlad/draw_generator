@@ -7,6 +7,7 @@ Hosted [here](https://andrewvlad.github.io/draw_generator/) on GitHub.
 ## Options
 - Number of dives
 - Number of points
+- Toggle images
 - Randoms and/or blocks
 - Unique exits
 
@@ -14,6 +15,7 @@ Hosted [here](https://andrewvlad.github.io/draw_generator/) on GitHub.
 - Instant generation
 - Perfectly random
 - Copy to clipboard
+- Export as PDF
 - No duplicate points within the same dive
 
 ## TODO

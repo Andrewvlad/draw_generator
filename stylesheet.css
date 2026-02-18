@@ -14,8 +14,8 @@ input:invalid {
 #diveImages > div::before {
     content: counter(dive-number);
     font-size: 40px;
-    color: var(--background);
-    background: var(--foreground);
+    color: white;
+    background: #171717;
     min-width: 50px;
     text-align: center;
     border-radius: 50%;
@@ -42,13 +42,6 @@ input:invalid {
     max-height: 240px;
     margin: 0 auto;
     border-radius: 10px;
-}
-
-@media (prefers-color-scheme: dark) {
-    :root {
-        --background: #151515;
-        --foreground: #ededed;
-    }
 }
 
 .toast {
@@ -82,14 +75,27 @@ body {
     font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Hide dive images when showImage checkbox is unchecked */
+body:not(:has(input[id="showImage"]:checked)) #diveImages * {
+    display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+    /* Override dark mode when checkbox is checked */
+    body:not(:has(input[id="showImage"]:checked)) {
+        --background: #151515;
+        --foreground: #ededed;
+    }
+}
+
 @media print {
     body *:not(.toPrint) {
         display: none
     }
 
-    /* Show element to print, and any children */
+    /* Show dive images to print */
     #diveImages * {
-        display: flex;
+        display: flex !important;
     }
 
     #diveImages div:nth-child(4n) {
