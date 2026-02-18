@@ -12,6 +12,13 @@
 <div id="dives"></div>
 
 <form>
+    <label for="divePool">Discipline:</label>
+    <select id="divePool" onchange="changePool()">
+        <option value="4-way_fs">4-way</option>
+        <option value="8-way_fs">8-way</option>
+    </select>
+    <br>
+
     <label for="numDives">Number of dives:</label>
     <input id="numDives" type="number" min="1" max="99" value="10" required>
     <br>
@@ -54,8 +61,24 @@
 
 
 <!--Scripts-->
-<script src="assets/diagrams/4-way_fs/rhythm/index.js"></script> <!--Load all images-->
+<script src="assets/diagrams/4-way_fs/rhythm/index.js"></script> <!--Load all 4-way images-->
+<script src="assets/diagrams/8-way_fs/rhythm/index.js"></script> <!--Load all 8-way images-->
 <script src="index.js"></script>
+<script>
+    let imagePaths = imagePaths4Way; // Used by divesAsImages()
+    const divePool = document.getElementById("divePool");
+
+    function changePool() {
+        if (divePool.value === "4-way_fs") {
+            imagePaths = imagePaths4Way;
+        } else {
+            imagePaths = imagePaths8Way;
+        }
+
+        // Reload the images
+        document.getElementById("diveImages").innerHTML = divesAsImages(generatedDives);
+    }
+</script>
 <script>
     let generatedDives;
     const numDives = document.getElementById("numDives");

@@ -1,5 +1,5 @@
 // Image paths for each point
-const imagePaths = {
+let imagePaths4Way = {
     // Randoms
     'A': 'assets/diagrams/4-way_fs/rhythm/A.webp',
     'B': 'assets/diagrams/4-way_fs/rhythm/B.webp',

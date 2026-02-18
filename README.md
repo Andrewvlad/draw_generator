@@ -5,6 +5,7 @@ Points for each dive are drawn from the pool until empty, and then the pool rese
 Hosted [here](https://andrewvlad.github.io/draw_generator/) on GitHub.
 
 ## Options
+- 4/8-way
 - Number of dives
 - Number of points
 - Toggle images
@@ -22,5 +23,5 @@ Hosted [here](https://andrewvlad.github.io/draw_generator/) on GitHub.
 - [x] Unique exits
 - [ ] Unique transitions
 - [x] Images
-- [ ] Different dive pools
+- [x] Different dive pools
 - [ ] Different disciplines
