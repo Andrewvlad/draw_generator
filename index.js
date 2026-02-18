@@ -11,11 +11,11 @@ const blocks = Array.from({length: 22}, (_, i) => i + 1);
 const randomItem = (arr) => arr.splice(Math.floor(Math.random() * arr.length), 1);
 
 // For HTML display
-const listDives = (arr) => "<ol>"
+const listDives = (arr) => typeof arr === 'string' ? generatedDives : "<ol>"
     + (arr.map(dive => `<li>${dive.join(', ')}</li>`)).join('')
     + "</ol>";
 
-const divesAsImages = (arr) => (arr.map(dive =>
+const divesAsImages = (arr) => typeof arr === 'string' ? '' : (arr.map(dive =>
         `<div>${dive.map(point => `<img src="${imagePaths[point]}" class="diagram" alt="${point}">`).join('')}</div>`
     )).join('');
 
