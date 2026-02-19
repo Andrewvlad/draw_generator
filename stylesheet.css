@@ -11,6 +11,7 @@ input:invalid {
     font-family: 'Courier New', monospace;
 }
 
+/* Counter before each dive */
 #diveImages > div::before {
     content: counter(dive-number);
     font-size: 40px;
@@ -21,11 +22,14 @@ input:invalid {
     border-radius: 50%;
 }
 
+#diveImages {
+    max-width: max-content;
+}
+
 #diveImages > div {
     display: flex;
+    height: 250px;
     align-items: center;
-    height: 242px;
-    max-width: 675px;
     counter-increment: dive-number;
     border-bottom: 1px solid black;
 }
@@ -35,13 +39,10 @@ input:invalid {
 }
 
 #diveImages > div > img {
-    min-width: 0;
+    max-height: calc(100% - 1px); /* So images don't clip over border when printing */
+    min-width: 0; /* Images scale to fit */
     background: white;
-    object-fit: scale-down;
-    height: auto;
-    max-height: 240px;
-    margin: 0 auto;
-    border-radius: 10px;
+    margin: 0 auto; /* Center horizontally within div */
 }
 
 .toast {
@@ -64,8 +65,8 @@ input:invalid {
     opacity: 0; /* Transition to 0 opacity */
 }
 
+/* Used with .offsetHeight to clear a currently running animation */
 .noTransition {
-    /* Used with .offsetHeight to clear a currently running animation */
     transition: none !important;
 }
 
@@ -89,6 +90,11 @@ body:not(:has(input[id="showImage"]:checked)) #diveImages * {
 }
 
 @media print {
+    @page {
+        margin: 0;
+    }
+
+    /* Don't show any of the body */
     body *:not(.toPrint) {
         display: none
     }
@@ -96,6 +102,15 @@ body:not(:has(input[id="showImage"]:checked)) #diveImages * {
     /* Show dive images to print */
     #diveImages * {
         display: flex !important;
+    }
+
+    #diveImages {
+        max-width: 100% !important;
+    }
+
+    #diveImages > div {
+        height: calc(calc(100vh/4) - 3px) !important; /* -3px for the 3 1px borders per page */
+        page-break-inside: avoid; /* Just in-case CSS fails, don't allow breaking of the div */
     }
 
     #diveImages div:nth-child(4n) {
