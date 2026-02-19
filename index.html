@@ -20,11 +20,11 @@
     <br>
 
     <label for="numDives">Number of dives:</label>
-    <input id="numDives" type="number" min="1" max="99" value="10" required>
+    <input id="numDives" type="number" min="1" max="99" value="10" required> <!--Don't reload on change, as it shifts page-->
     <br>
 
     <label for="points">Number of points:</label>
-    <select id="points">
+    <select id="points" onchange="addToPage()">
         <option value="3">3 - 4</option>
         <option value="4">4 - 5</option>
         <option value="5">5 - 6</option>
@@ -32,17 +32,17 @@
     <br>
 
     <div>
-        <input type="radio" id="blocksAndRandoms" name="blocksAndRandoms" value="{}" checked/>
+        <input type="radio" id="blocksAndRandoms" name="blocksAndRandoms" value="{}" checked onchange="addToPage()"/>
         <label for="blocksAndRandoms">Randoms & Blocks</label>
 
-        <input type="radio" id="onlyRandoms" name="blocksAndRandoms" value='{"useBlocks":false}'/>
+        <input type="radio" id="onlyRandoms" name="blocksAndRandoms" value='{"useBlocks":false}' onchange="addToPage()"/>
         <label for="onlyRandoms">Only Randoms</label>
 
-        <input type="radio" id="onlyBlocks" name="blocksAndRandoms" value='{"useRandoms":false}'/>
+        <input type="radio" id="onlyBlocks" name="blocksAndRandoms" value='{"useRandoms":false}' onchange="addToPage()"/>
         <label for="onlyBlocks">Only Blocks</label>
     </div>
 
-    <input type="checkbox" id="uniqueExits">
+    <input type="checkbox" id="uniqueExits" onchange="addToPage()">
     <label for="uniqueExits">Unique Exits</label>
     <br>
 
