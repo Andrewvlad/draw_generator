@@ -20,6 +20,9 @@ input:invalid {
     min-width: 50px;
     text-align: center;
     border-radius: 50%;
+    /* Show background when printing */
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
 }
 
 #diveImages {
@@ -95,7 +98,7 @@ body:not(:has(input[id="showImage"]:checked)) #diveImages * {
     }
 
     /* Don't show any of the body */
-    body *:not(.toPrint) {
+    body *:not(#diveImages) {
         display: none
     }
 
