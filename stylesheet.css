@@ -95,6 +95,8 @@ body:not(:has(input[id="showImage"]:checked)) #diveImages * {
 @media print {
     @page {
         margin: 0;
+        width: 8.5in;
+        height: 11in;
     }
 
     /* Don't show any of the body */
@@ -112,7 +114,7 @@ body:not(:has(input[id="showImage"]:checked)) #diveImages * {
     }
 
     #diveImages > div {
-        height: calc(calc(100vh/4) - 3px) !important; /* -3px for the 3 1px borders per page */
+        height: calc(11in/4 - 3px) !important; /* 2 px base plus 1px for borders */
         page-break-inside: avoid; /* Just in-case CSS fails, don't allow breaking of the div */
     }
 
