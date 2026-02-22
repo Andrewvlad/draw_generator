@@ -113,13 +113,13 @@ body:not(:has(input[id="showImage"]:checked)) #diveImages * {
         max-width: 100% !important;
     }
 
+    /*Show 4 rows per page*/
     #diveImages > div {
         height: calc(11in/4 - 3px) !important; /* 2 px base plus 1px for borders */
-        page-break-inside: avoid; /* Just in-case CSS fails, don't allow breaking of the div */
+        page-break-inside: avoid; /* Don't allow breaking of the div */
     }
 
     #diveImages div:nth-child(4n) {
-        page-break-after: always;
         border: none;
     }
 }
