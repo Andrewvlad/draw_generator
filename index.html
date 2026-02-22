@@ -55,7 +55,7 @@
 
     <button type="button" onclick="addToPage()">Generate dives</button>
     <button type="button" onclick="copyToClipboard()">Copy dives to clipboard</button>
-    <button type="button" onclick="window.print()">Save dives as PDF</button>
+    <button type="button" onclick="printDives()">Save dives as PDF</button>
 </form>
 
 <div id="diveImages"></div>
@@ -101,6 +101,43 @@
         }
     }
     addToPage();
+</script>
+<script>
+    const cache = new Map(); // Cache downscaled data URLs by src
+
+    async function printDives() {
+        const originalImages = new Map();
+        const images = document.querySelectorAll("#diveImages img");
+        const scale = 0.35; // Scale images to 35% (~150 DPI)
+
+        // Downscale each image once, then reuse from cache
+        await Promise.all(Array.from(images).map(async image => {
+            if (!cache.has(image.src)) {
+                cache.set(image.src, fetch(image.src)
+                    .then(response => response.blob())
+                    .then(blob => createImageBitmap(blob, {
+                        resizeWidth: Math.round(image.naturalWidth * scale),
+                        resizeHeight: Math.round(image.naturalHeight * scale),
+                        resizeQuality: "high",
+                    }))
+                    .then(bitmap => {
+                        const canvas = document.createElement("canvas");
+                        canvas.width = bitmap.width;
+                        canvas.height = bitmap.height;
+                        canvas.getContext("2d").drawImage(bitmap, 0, 0);
+                        bitmap.close();
+                        return canvas.toDataURL("image/png");
+                    })
+                );
+            }
+            originalImages.set(image, image.src);
+            image.src = await cache.get(image.src);
+        }));
+
+        window.print();
+        // Restore images after printing
+        originalImages.forEach((src, image) => image.src = src);
+    }
 </script>
 <script>
     const toast = document.getElementById("copyClipboardToast");
