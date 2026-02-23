@@ -55,7 +55,7 @@
 
     <button type="button" onclick="addToPage()">Generate dives</button>
     <button type="button" onclick="copyToClipboard()">Copy dives to clipboard</button>
-    <button type="button" onclick="printDives()">Save dives as PDF</button>
+    <button type="button" id="printButton" onclick="printDives()">Save dives as PDF</button>
 </form>
 
 <div id="diveImages"></div>
@@ -106,6 +106,9 @@
     const cache = new Map(); // Cache downscaled data URLs by src
 
     async function printDives() {
+        const printButton = document.getElementById("printButton");
+        printButton.disabled = true;
+
         const originalImages = new Map();
         const images = document.querySelectorAll("#diveImages img");
         const scale = 0.35; // Scale images to 35% (~150 DPI)
@@ -137,6 +140,7 @@
         window.print();
         // Restore images after printing
         originalImages.forEach((src, image) => image.src = src);
+        printButton.disabled = false;
     }
 </script>
 <script>
