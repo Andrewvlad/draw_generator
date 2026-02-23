@@ -14,7 +14,7 @@
 <h1>FS Dive Generator</h1>
 <div id="dives"></div>
 
-<form>
+<div> <!--Div over form to prevent undocumented [ENTER] refreshing the page-->
     <label for="divePool">Discipline:</label>
     <select id="divePool" onchange="changePool()">
         <option value="4-way_fs">4-way</option>
@@ -56,7 +56,7 @@
     <button type="button" onclick="addToPage()">Generate dives</button>
     <button type="button" onclick="copyToClipboard()">Copy dives to clipboard</button>
     <button type="button" id="printButton" onclick="printDives()">Save dives as PDF</button>
-</form>
+</div>
 
 <div id="diveImages"></div>
 
