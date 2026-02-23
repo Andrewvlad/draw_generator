@@ -169,7 +169,9 @@
 <!--Keybindings-->
 <script>
     document.addEventListener("keydown", (e) => {
-        if (e.code === "Enter" && !["INPUT", "SELECT", "BUTTON", "TEXTAREA"].includes(document.activeElement.tagName)) {
+        if (e.target === numDives && e.code === "Enter") {
+            e.target.blur();
+        } else if (e.code === "Enter" && !["INPUT", "SELECT", "BUTTON", "TEXTAREA"].includes(document.activeElement.tagName)) {
             e.preventDefault();
             addToPage();
         }
