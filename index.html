@@ -166,6 +166,15 @@
         toastTimeout = setTimeout(() => toast.classList.remove("show"), 1250);
     }
 </script>
+<!--Keybindings-->
+<script>
+    document.addEventListener("keydown", (e) => {
+        if (e.code === "Enter" && !["INPUT", "SELECT", "BUTTON", "TEXTAREA"].includes(document.activeElement.tagName)) {
+            e.preventDefault();
+            addToPage();
+        }
+    });
+</script>
 <noscript>To use this tool, please enable JavaScript.</noscript>
 
 </body>
