@@ -20,6 +20,9 @@
         <option value="4-way_fs">4-way</option>
         <option value="8-way_fs">8-way</option>
     </select>
+
+    <input type="checkbox" id="useOutdoor" onchange="changePool()" hidden>
+    <label for="useOutdoor">Use outdoor?</label>
     <br>
 
     <label for="numDives">Number of dives:</label>
@@ -70,12 +73,18 @@
 <script>
     let imagePaths = imagePaths4Way; // Used by divesAsImages()
     const divePool = document.getElementById("divePool");
+    const useOutdoor = document.getElementById("useOutdoor");
 
     function changePool() {
-        if (divePool.value === "4-way_fs") {
-            imagePaths = imagePaths4Way;
-        } else {
-            imagePaths = imagePaths8Way;
+        switch (divePool.value) {
+            case "4-way_fs":
+                useOutdoor.hidden = true;
+                imagePaths = imagePaths4Way;
+                break;
+            case "8-way_fs":
+                useOutdoor.hidden = false;
+                imagePaths = useOutdoor.checked ? imagePaths8WayOutdoor : imagePaths8Way;
+                break;
         }
 
         // Reload the images

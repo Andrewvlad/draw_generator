@@ -44,3 +44,10 @@ let imagePaths8Way = {
     21: 'assets/diagrams/8-way_fs/rhythm/21_8way.webp',
     22: 'assets/diagrams/8-way_fs/rhythm/22_8way.webp',
 };
+
+let imagePaths8WayOutdoor = {
+    ...imagePaths8Way,
+    13: 'assets/diagrams/8-way_fs/rhythm/13_8way_sky.webp',
+    17: 'assets/diagrams/8-way_fs/rhythm/17_8way_sky.webp',
+    20: 'assets/diagrams/8-way_fs/rhythm/20_8way_sky.webp',
+};
