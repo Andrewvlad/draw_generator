@@ -18,6 +18,8 @@ Hosted [here](https://andrewvlad.github.io/draw_generator/) on GitHub.
 - Copy to clipboard
 - Export as PDF
 - No duplicate points within the same dive
+- Keybindings
+  - `[ENTER]` - Generate dives
 
 ## TODO
 - [x] Unique exits
