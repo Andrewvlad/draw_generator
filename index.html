@@ -37,24 +37,33 @@
     </select>
     <br>
 
-    <div>
-        <input type="radio" id="blocksAndRandoms" name="blocksAndRandoms" value="{}" checked onchange="addToPage()"/>
-        <label for="blocksAndRandoms">Randoms & Blocks</label>
-
-        <input type="radio" id="onlyRandoms" name="blocksAndRandoms" value='{"useBlocks":false}' onchange="addToPage()"/>
-        <label for="onlyRandoms">Only Randoms</label>
-
-        <input type="radio" id="onlyBlocks" name="blocksAndRandoms" value='{"useRandoms":false}' onchange="addToPage()"/>
-        <label for="onlyBlocks">Only Blocks</label>
+    <div class="additionalSettings" hidden>
+        <input type="checkbox" id="showImage">
+        <label for="showImage">Display images below (forces light-mode)</label>
+        <br>
     </div>
 
-    <input type="checkbox" id="uniqueExits" onchange="checked && addToPage()">
-    <label for="uniqueExits">Unique Exits</label>
-    <br>
+    <div class="additionalSettings" hidden>
+        <div>
+            <input type="radio" id="blocksAndRandoms" name="blocksAndRandoms" value="{}" checked onchange="addToPage()"/>
+            <label for="blocksAndRandoms">Randoms & Blocks</label>
 
-    <input type="checkbox" id="showImage">
-    <label for="showImage">Display images below (forces light-mode)</label>
-    <br>
+            <input type="radio" id="onlyRandoms" name="blocksAndRandoms" value='{"useBlocks":false}' onchange="addToPage()"/>
+            <label for="onlyRandoms">Only Randoms</label>
+
+            <input type="radio" id="onlyBlocks" name="blocksAndRandoms" value='{"useRandoms":false}' onchange="addToPage()"/>
+            <label for="onlyBlocks">Only Blocks</label>
+        </div>
+
+        <input type="checkbox" id="uniqueExits" onchange="checked && addToPage()">
+        <label for="uniqueExits">Unique Exits</label>
+        <br>
+    </div>
+
+    <div> <!--Display settings buttons-->
+        <button type="button" id="moreSettings" onclick="incrementSettings()">More settings</button>
+        <button type="button" id="lessSettings" onclick="decrementSettings()" disabled>Less settings</button>
+    </div>
 
     <button type="button" onclick="addToPage()">Generate dives</button>
     <button type="button" onclick="copyToClipboard()">Copy dives to clipboard</button>
@@ -70,6 +79,7 @@
 <script src="assets/diagrams/4-way_fs/rhythm/index.js"></script> <!--Load all 4-way images-->
 <script src="assets/diagrams/8-way_fs/rhythm/index.js"></script> <!--Load all 8-way images-->
 <script src="index.js"></script>
+<!--Switch between image sets-->
 <script>
     let imagePaths = imagePaths4Way; // Used by divesAsImages()
     const divePool = document.getElementById("divePool");
@@ -91,6 +101,7 @@
         document.getElementById("diveImages").innerHTML = divesAsImages(generatedDives);
     }
 </script>
+<!--Dive generation-->
 <script>
     let generatedDives;
     const numDives = document.getElementById("numDives");
@@ -111,6 +122,7 @@
     }
     addToPage();
 </script>
+<!--Image printing-->
 <script>
     const cache = new Map(); // Cache downscaled data URLs by src
 
@@ -152,6 +164,7 @@
         printButton.disabled = false;
     }
 </script>
+<!--Copy to clipboard & toast notification-->
 <script>
     const toast = document.getElementById("copyClipboardToast");
     let toastTimeout;
@@ -173,6 +186,33 @@
         // Display a toast notification
         refreshToast();
         toastTimeout = setTimeout(() => toast.classList.remove("show"), 1250);
+    }
+</script>
+<!--Toggleable settings-->
+<script>
+    const additionalSettings = document.querySelectorAll(".additionalSettings");
+    const moreSettings = document.getElementById("moreSettings");
+    const lessSettings = document.getElementById("lessSettings");
+    let settingsLevel = 0;
+
+    function incrementSettings() {
+        additionalSettings[settingsLevel++].hidden = false;
+
+        lessSettings.disabled = false;
+        // Disable if max settings reached
+        if (settingsLevel === additionalSettings.length) {
+            moreSettings.disabled = true;
+        }
+    }
+
+    function decrementSettings() {
+        additionalSettings[--settingsLevel].hidden = true;
+
+        moreSettings.disabled = false;
+        // Disable if min settings reached
+        if (settingsLevel === 0) {
+            lessSettings.disabled = true;
+        }
     }
 </script>
 <!--Keybindings-->
