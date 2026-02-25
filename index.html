@@ -61,8 +61,10 @@
     </div>
 
     <div> <!--Display settings buttons-->
-        <button type="button" id="moreSettings" onclick="incrementSettings()">More settings</button>
-        <button type="button" id="lessSettings" onclick="decrementSettings()" disabled>Less settings</button>
+        <label>Settings:
+            <button type="button" id="moreSettings" onclick="incrementSettings()">▼ More</button>
+            <button type="button" id="lessSettings" onclick="decrementSettings()" disabled>▲ Less</button>
+        </label>
     </div>
 
     <button type="button" onclick="addToPage()">Generate dives</button>

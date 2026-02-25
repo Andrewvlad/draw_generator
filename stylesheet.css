@@ -7,6 +7,21 @@ input[hidden] + label, label + input[hidden] {
     visibility: hidden;
 }
 
+label {
+    line-height: 1.4;
+}
+
+#moreSettings, #lessSettings {
+    background: none;
+    border: none;
+    color: dodgerblue;
+    padding: 0;
+
+    &:disabled {
+        color: GrayText;
+    }
+}
+
 :root {
     --background: #ffffff;
     --foreground: #171717;
