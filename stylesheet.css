@@ -16,7 +16,31 @@ button:hover:not(:disabled) {
 }
 
 #printButton:disabled {
+    /* To be consistent on chromium browsers, the DOM needs to be updated (such as with the spinner below) */
     cursor: wait;
+}
+
+/* Loading spinner */
+#printButton:disabled::after {
+    content: "";
+    width: 1em;
+    height: 1em;
+    box-sizing: border-box; /* So that the spinner border does not change the button size */
+    display: inline-block;
+    vertical-align: text-bottom;
+    margin-left: 0.25em;
+
+    /* Spinner */
+    border: 2px solid;
+    border-radius: 50%;
+    border-color: transparent dodgerblue dodgerblue dodgerblue; /* ¼ sides transparent */
+    animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 #moreSettings, #lessSettings {
