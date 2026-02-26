@@ -11,6 +11,14 @@ label {
     line-height: 1.4;
 }
 
+button:hover:not(:disabled) {
+    cursor: pointer;
+}
+
+#printButton:disabled {
+    cursor: wait;
+}
+
 #moreSettings, #lessSettings {
     background: none;
     border: none;
