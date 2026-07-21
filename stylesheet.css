@@ -144,11 +144,15 @@ body:not(:has(input[id="showImage"]:checked)) #diveImages * {
     }
 }
 
+/* We are re-using the same page for printing, instead of re-loading all of the images */
 @media print {
     @page {
         margin: 0;
-        width: 8.5in;
-        height: 11in;
+        size: auto; /* Use the target paper size (Letter, A4, etc.) instead of forcing Letter */
+    }
+
+    body {
+        margin: 0 !important;
     }
 
     /* Don't show any of the body */
@@ -165,13 +169,48 @@ body:not(:has(input[id="showImage"]:checked)) #diveImages * {
         max-width: 100% !important;
     }
 
-    /*Show 4 rows per page*/
+    /* Dividers are top borders, and no border between page seams */
     #diveImages > div {
-        height: calc(11in/4 - 3px) !important; /* 2 px base plus 1px for borders */
-        page-break-inside: avoid; /* Don't allow breaking of the div */
+        box-sizing: border-box !important;
+        page-break-inside: avoid !important; /* Don't split a dive across pages */
+        border-top: 1px solid black !important;
+        border-bottom: none !important;
+        padding-bottom: 1px !important; /* Prevent divider from getting clipped */
     }
 
-    #diveImages div:nth-child(4n) {
-        border: none;
+    /* Keep the number circle off the page's edge */
+    #diveImages > div::before {
+        margin-left: 8px;
+    }
+
+    /* Rows fill the paper height exactly via --paper-mm (printer page size) */
+    /* Auto defaults to Letter */
+    #diveImages > div {
+        height: calc(var(--paper-mm) / var(--rows) - 0.2mm) !important; /* 0.2 reserved as slack */
+    }
+
+    /* Show X rows per page */
+    /* Mobile Chrome ignores vh in print */
+    /* :not(:last-child) avoids a trailing blank page */
+    /* Yes, this is the best way to do this with CSS */
+    #diveImages[data-rows="2"] > div {
+        &:nth-child(2n+1) { border-top: none !important; } /* Page-first row: no divider on the seam */
+        &:nth-child(2n):not(:last-child) { page-break-after: always !important; }
+    }
+    #diveImages[data-rows="3"] > div {
+        &:nth-child(3n+1) { border-top: none !important; }
+        &:nth-child(3n):not(:last-child) { page-break-after: always !important; }
+    }
+    #diveImages[data-rows="4"] > div {
+        &:nth-child(4n+1) { border-top: none !important; }
+        &:nth-child(4n):not(:last-child) { page-break-after: always !important; }
+    }
+    #diveImages[data-rows="5"] > div {
+        &:nth-child(5n+1) { border-top: none !important; }
+        &:nth-child(5n):not(:last-child) { page-break-after: always !important; }
+    }
+    #diveImages[data-rows="6"] > div {
+        &:nth-child(6n+1) { border-top: none !important; }
+        &:nth-child(6n):not(:last-child) { page-break-after: always !important; }
     }
 }

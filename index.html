@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=450"> <!--Sets minimum width to 450, so the widest element fits (radio)-->
     <title>FS Dive Generator</title>
     <link rel="stylesheet" type="text/css" href="stylesheet.css">
+    <style id="pageSizeRule"></style> <!--JS injects @page{size:X} when a specific paper is chosen-->
 </head>
 <body>
 
@@ -62,6 +63,26 @@
         <input type="checkbox" id="uniqueTransitions" onchange="checked && addToPage()">
         <label for="uniqueTransitions" title="Transitions are basic-unique (similar formations are still treated as unique)">Unique Transitions*</label>
         <br>
+
+        <label for="paperSize">Paper size:</label>
+        <select id="paperSize" onchange="setPaper(this.value)">
+            <option value="auto" selected>Auto (browser)</option>
+            <option value="Letter">Letter</option>
+            <option value="A4">A4</option>
+            <option value="A5">A5</option>
+            <option value="Legal">Legal</option>
+        </select>
+        <br>
+
+        <label for="rowsPerPage">Rows per page:</label>
+        <select id="rowsPerPage" onchange="setRows(this.value)">
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4" selected>4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+        </select>
+        <br>
     </div>
 
     <div> <!--Display settings buttons-->
@@ -76,7 +97,8 @@
     <button type="button" id="printButton" onclick="printDives()">Save dives as PDF</button>
 </div>
 
-<div id="diveImages"></div>
+<!--Hidden HTML element (for CSS to consume during print)-->
+<div id="diveImages" data-rows="4" style="--rows: 4; --paper-mm: 279.4mm"></div>
 
 <div id="copyClipboardToast" class="toast">Copied to clipboard</div>
 
@@ -170,6 +192,25 @@
         // Restore images after printing
         originalImages.forEach((src, image) => image.src = src);
         printButton.disabled = false;
+    }
+</script>
+<!--Print layout-->
+<script>
+    const PAPER_MM = { Letter: 279.4, A4: 297, A5: 210, Legal: 355.6 }; // Portrait long-edge, mm
+    const diveImages = document.getElementById("diveImages");
+    const pageSizeRule = document.getElementById("pageSizeRule");
+
+    function setRows(value) {
+        diveImages.dataset.rows = value;
+        diveImages.style.setProperty("--rows", value); // For CSS calc (to determine page seams)
+    }
+
+    function setPaper(value) {
+        // Row height/width defaults to Letter, unless manually defined
+        const paper = value === "auto" ? "Letter" : value;
+        diveImages.style.setProperty("--paper-mm", `${PAPER_MM[paper]}mm`);
+        // PDF size is derived from browser, unless manually defined
+        pageSizeRule.textContent = value === "auto" ? "" : `@page { size: ${value} }`;
     }
 </script>
 <!--Copy to clipboard & toast notification-->
