@@ -33,10 +33,12 @@ const main = ({
 }) => {
     // Fewest formations a dive can use to reach minPoints (used for uniqueTransitions error)
     const minFormations = useBlocks ? Math.ceil(minPoints / 2) : minPoints;
+    const MAX_RESTARTS = 100000;
     let dives = [];
     let exits = new Set();
     // Flat set is faster traversal than a nested object of {from: set() // to)} for such a small set
     let transitions = new Set();
+    let restarts = 0;
     let pool = [];
 
     while (dives.length < numDives) {
@@ -54,6 +56,7 @@ const main = ({
             const transitionDeadlock = uniqueTransitions && newDive.length && pool.length
                 && pool.every(point => newDive.includes(point) || transitionUsed(point));
             if (exitDeadlock || transitionDeadlock) {
+                if (restarts++ >= MAX_RESTARTS) return `Could not generate a random draw within ${MAX_RESTARTS} attempts that matches the uniqueness constraint(s)`;
                 dives = [];
                 pool = [];
                 newDive = [];
