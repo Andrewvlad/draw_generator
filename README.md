@@ -23,7 +23,7 @@ Hosted [here](https://andrewvlad.github.io/draw_generator/) on GitHub.
 
 ## TODO
 - [x] Unique exits
-- [ ] Unique transitions
+- [x] Unique transitions
 - [x] Images
 - [x] Different dive pools
 - [ ] Different disciplines

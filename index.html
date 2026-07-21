@@ -58,6 +58,10 @@
         <input type="checkbox" id="uniqueExits" onchange="checked && addToPage()">
         <label for="uniqueExits">Unique Exits</label>
         <br>
+
+        <input type="checkbox" id="uniqueTransitions" onchange="checked && addToPage()">
+        <label for="uniqueTransitions" title="Transitions are basic-unique (similar formations are still treated as unique)">Unique Transitions*</label>
+        <br>
     </div>
 
     <div> <!--Display settings buttons-->
@@ -109,6 +113,7 @@
     const numDives = document.getElementById("numDives");
     const minPoints = document.getElementById("points");
     const uniqueExits = document.getElementById("uniqueExits");
+    const uniqueTransitions = document.getElementById("uniqueTransitions");
 
     function addToPage() {
         if (numDives.checkValidity() && minPoints.checkValidity()) {
@@ -116,6 +121,7 @@
                 numDives: numDives.value,
                 minPoints: minPoints.value,
                 uniqueExits: uniqueExits.checked,
+                uniqueTransitions: uniqueTransitions.checked,
                 ...JSON.parse(document.querySelector('input[name="blocksAndRandoms"]:checked').value),
             });
             document.getElementById("dives").innerHTML = listDives(generatedDives);
