@@ -1,109 +1,451 @@
-input:invalid {
-    border: 2px solid red;
-}
-
-/* Hide label if it's input field is hidden */
-input[hidden] + label, label + input[hidden] {
-    visibility: hidden;
-}
-
-label {
-    line-height: 1.4;
-}
-
-button:hover:not(:disabled) {
-    cursor: pointer;
-}
-
-#printButton:disabled {
-    /* To be consistent on chromium browsers, the DOM needs to be updated (such as with the spinner below) */
-    cursor: wait;
-}
-
-/* Loading spinner */
-#printButton:disabled::after {
-    content: "";
-    width: 1em;
-    height: 1em;
-    box-sizing: border-box; /* So that the spinner border does not change the button size */
-    display: inline-block;
-    vertical-align: text-bottom;
-    margin-left: 0.25em;
-
-    /* Spinner */
-    border: 2px solid;
-    border-radius: 50%;
-    border-color: transparent dodgerblue dodgerblue dodgerblue; /* ¼ sides transparent */
-    animation: spin 0.75s linear infinite;
-}
-
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-#moreSettings, #lessSettings {
-    background: none;
-    border: none;
-    color: dodgerblue;
-    padding: 0;
-
-    &:disabled {
-        color: GrayText;
-    }
-}
+/* ---- */
+/* Base */
+/* ---- */
 
 :root {
+    /* Colors */
     --background: #ffffff;
     --foreground: #171717;
+    --bg: #f4f5f7;
+    --border: #e2e5ea;
+    --border-strong: #cdd2da;
+    --text: #1b1f24;
+    --muted: #6b7280;
+    --accent: #1e90ff;
+    --accent-soft: #e8f2ff;
+    --bad: #e5484d;
+    --radius: 8px;
+    --drawer-width: 320px;
+
+    /* Fonts */
+    --sans: -apple-system, system-ui, "Segoe UI", Roboto, Arial, sans-serif;
+    --mono: ui-monospace, "Courier New", monospace;
 }
 
-#dives {
-    font-family: 'Courier New', monospace;
+* {
+    /* Include borders for all measurements */
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+
+    /* Disable all highlighting/selection */
+    user-select: none;
+    -webkit-tap-highlight-color: transparent; /* Kill the blue tap flash on touch */
+
+    font-size: 15px;
+    line-height: 1.5;
+    font-family: var(--sans), serif;
 }
 
-/* Counter before each dive */
-#diveImages > div::before {
-    content: counter(dive-number);
-    font-size: 40px;
-    color: white;
-    background: #171717;
-    min-width: 50px;
-    text-align: center;
-    border-radius: 50%;
-    /* Show background when printing */
-    print-color-adjust: exact;
-    -webkit-print-color-adjust: exact;
+body {
+    height: 100dvh;
+    overflow: hidden; /* Inner panels scroll, not the page */
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto; /* minmax lets the middle row shrink below content */
+
+    color: var(--foreground);
+
+    /* Set border between panels */
+    gap: 1px;
+    background: var(--border); /* Gap (border) color */
 }
 
-#diveImages {
-    max-width: max-content;
+/* Set panel background */
+body > * {
+    background: var(--background);
 }
 
-#diveImages > div {
-    display: flex;
-    height: 250px;
-    align-items: center;
-    counter-increment: dive-number;
-    border-bottom: 1px solid black;
+/* Hide dive images when showImages checkbox is unchecked */
+body:not(:has(button[id="showImages"][aria-pressed="true"])) #diveImages * {
+    display: none;
+}
+body:has(button[id="showImages"][aria-pressed="true"]) #dives {
+    display: none;
 }
 
-#diveImages > div:last-child {
+input:invalid {
+    border: 2px solid #e5484d;
+}
+
+/* --------------- */
+/* Utility Classes */
+/* --------------- */
+
+/* ---------------- */
+/* General Elements */
+/* ---------------- */
+
+button {
+    cursor: pointer;
+    background: none;
+
+    &:disabled {
+        cursor: default;
+    }
+}
+
+svg {
+    display: block; /* Center the SVG vertically */
+}
+
+select, input[type="number"] {
+    width: 140px;
+    min-width: max-content;
+    padding: 8px;
+    background: #ffffff;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+
+    &:focus-visible {
+        outline: 2px solid var(--accent);
+    }
+}
+
+/* ---------------- */
+/* Utility Elements */
+/* ---------------- */
+
+button.icon {
+    width: 34px;
+    height: 34px;
+    place-items: center;
     border: none;
+    border-radius: var(--radius);
+    color: var(--muted);
+
+    &:hover {
+        background: var(--bg);
+        color: var(--text);
+    }
+
+    &[aria-pressed="true"] {
+        background: var(--accent-soft);
+        border-color: var(--accent);
+        color: var(--accent);
+    }
+
+    svg {
+        width: 18px;
+        height: 18px;
+    }
 }
 
-#diveImages > div > img {
-    max-height: calc(100% - 1px); /* So images don't clip over border when printing */
-    min-width: 0; /* Images scale to fit */
-    background: white;
-    margin: 0 auto; /* Center horizontally within div */
+.toggle {
+    appearance: none;
+    width: 40px;
+    height: 24px;
+    position: relative;
+    border-radius: 40px;
+    background: var(--border-strong);
+    transition: 0.25s;
+
+    &::after {
+        content: "";
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #ffffff;
+        transition: 0.25s;
+    }
+
+    &:checked {
+        background: var(--accent);
+    }
+
+    &:checked::after {
+        left: 19px;
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+    }
 }
+
+.segmentedControl {
+    display: inline-flex;
+    gap: 1px;
+    padding: 3px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+
+    button {
+        flex: 1;
+        padding: 6px 12px;
+        border: none;
+        border-radius: 6px; /* Rounded corners */
+        color: var(--muted);
+        font-size: 13px;
+        white-space: nowrap;
+
+        &[aria-pressed="true"] {
+            background: #ffffff;
+            color: var(--text);
+            font-weight: 600;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        &:hover {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        &:disabled {
+            opacity: 0.5;
+        }
+    }
+}
+
+/* ------ */
+/* Header */
+/* ------ */
+
+header {
+    display: flex;
+    align-items: center;
+    padding: 12px 18px;
+
+    h1 {
+        margin-right: auto;
+        font-size: 1.25rem;
+        font-weight: 600;
+
+    }
+}
+
+/* ---- */
+/* Main */
+/* ---- */
+
+main {
+    display: grid;
+    grid-template-columns: var(--drawer-width) 1fr;
+    grid-template-rows: minmax(0, 1fr); /* Without this the implicit row grows to fit content. Needed for scrolling */
+    transition: grid-template-columns 0.25s;
+
+    &:has(> aside[inert]) {
+        grid-template-columns: 0 1fr;
+
+        aside {
+            transform: translateX(-100%);
+        }
+    }
+
+    /* --------------- */
+    /* Settings Drawer */
+    /* --------------- */
+
+    aside {
+        padding: 12px 18px;
+        border-right: 1px solid var(--border);
+        overflow: hidden auto; /* Clip content while the track collapses */
+
+        details {
+            border-bottom: 1px solid var(--border);
+
+            summary {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 12px 0;
+                color: var(--muted);
+                font-size: 11px;
+                font-weight: 700;
+                text-transform: uppercase;
+                cursor: pointer;
+
+                &::-webkit-details-marker {
+                    display: none;
+                }
+
+                .chevron {
+                    width: 12px;
+                    height: 12px;
+                    color: var(--muted);
+                    transition: 0.25s;
+                }
+            }
+
+            &[open] summary .chevron {
+                transform: rotate(90deg);
+            }
+
+            .section-body {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 12px;
+                padding-bottom: 12px;
+
+                > div {
+                    width: 100%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                }
+            }
+
+            label {
+                color: var(--muted);
+                font-size: 13px;
+            }
+        }
+    }
+
+    /* ------------ */
+    /* Draw Preview */
+    /* ------------ */
+
+    section {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr); /* Header, then the scrolling preview */
+
+        #previewHeader {
+            width: 100%;
+            padding: 12px 18px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px; /* Space between header and edit button */
+
+            h2 {
+                font-weight: 500;
+            }
+
+            > div.segmentedControl {
+                margin-left: auto;
+            }
+
+            border-bottom: 1px solid var(--border);
+        }
+
+        #dives {
+            font-family: var(--mono) monospace;
+            overflow-y: auto;
+            scrollbar-gutter: stable both-edges;
+
+            * {
+                user-select: text;
+            }
+
+            ol {
+                padding-left: 2rem;
+
+                /* Since mobile does not have a scrollbar, it needs more padding */
+                @media (min-width: 1024px) {
+                    padding-left: 1rem;
+                }
+
+                li {
+                    padding-top: 0.25rem;
+                }
+            }
+        }
+
+        /* Counter before each dive */
+        #diveImages > div::before {
+            content: counter(dive-number);
+            font-size: 40px;
+            color: #ffffff;
+            background: var(--foreground);
+            width: 60px;
+            aspect-ratio: 1;
+            display: grid;
+            place-items: center;
+            line-height: 1;
+            border-radius: 50%;
+            /* Show background when printing */
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+        }
+
+        #diveImages {
+            overflow-y: auto;
+            scrollbar-gutter: stable both-edges;
+        }
+
+        #diveImages > div {
+            display: flex;
+            align-items: center;
+            counter-increment: dive-number;
+            border-bottom: 1px solid black;
+        }
+
+        #diveImages > div:last-child {
+            border: none;
+        }
+
+        #diveImages > div > img {
+            min-width: 0; /* Images scale to fit */
+            max-width: 100%;
+            max-height: 300px;
+            background: #ffffff;
+            margin: 0 auto; /* Center horizontally within div */
+        }
+    }
+}
+
+/* ------ */
+/* Footer */
+/* ------ */
+
+footer {
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    height: 70px;
+    padding: 12px 18px;
+    background: #ffffff;
+
+    button {
+        height: 100%;
+        border-radius: var(--radius);
+    }
+
+    #generate {
+        flex: 1;
+        max-width: 420px;
+        padding: 12px 18px;
+        border: 1px solid var(--accent);
+        background: var(--accent);
+        color: #ffffff;
+        font-weight: bold;
+    }
+
+    #settingsToggle {
+        aspect-ratio: 1; /* width matches height */
+        display: grid;
+        place-items: center;
+        border: 1px solid var(--border);
+        color: var(--muted);
+
+        &:hover {
+            color: var(--text);
+        }
+
+        svg {
+            width: 20px;
+            height: 20px;
+        }
+    }
+}
+
+/* ----- */
+/* Toast */
+/* ----- */
+
+/* The toast notifies when copying to clipboard */
 
 .toast {
     visibility: hidden;
-    background-color: #222;
-    color: white;
+    background-color: #222222;
+    color: #ffffff;
     text-align: center;
     border-radius: 21px; /* Rounded corners */
     padding: 12px 18px;
@@ -113,11 +455,11 @@ button:hover:not(:disabled) {
     transform: translateX(-50%);
     opacity: 1; /* Transition from 1 opacity */
     transition: opacity 1s ease-out 0.25s; /* Transition for 1s after 0.25s, quickly at first */
-}
 
-.toast.show {
-    visibility: visible;
-    opacity: 0; /* Transition to 0 opacity */
+    &.show {
+        opacity: 0; /* Transition to 0 opacity */
+        visibility: visible;
+    }
 }
 
 /* Used with .offsetHeight to clear a currently running animation */
@@ -125,24 +467,9 @@ button:hover:not(:disabled) {
     transition: none !important;
 }
 
-body {
-    background: var(--background);
-    color: var(--foreground);
-    font-family: Arial, Helvetica, sans-serif;
-}
-
-/* Hide dive images when showImage checkbox is unchecked */
-body:not(:has(input[id="showImage"]:checked)) #diveImages * {
-    display: none;
-}
-
-@media (prefers-color-scheme: dark) {
-    /* Override dark mode when checkbox is checked */
-    body:not(:has(input[id="showImage"]:checked)) {
-        --background: #151515;
-        --foreground: #ededed;
-    }
-}
+/* ----- */
+/* Print */
+/* ----- */
 
 /* We are re-using the same page for printing, instead of re-loading all of the images */
 @media print {
@@ -152,7 +479,10 @@ body:not(:has(input[id="showImage"]:checked)) #diveImages * {
     }
 
     body {
+        background: #ffffff !important;
         margin: 0 !important;
+        height: auto !important; /* Release the viewport clamp, or printing clips to one page */
+        overflow: visible !important;
     }
 
     /* Don't show any of the body */
@@ -160,12 +490,17 @@ body:not(:has(input[id="showImage"]:checked)) #diveImages * {
         display: none
     }
 
+    main, section { display: block !important; }
+
+    #previewHeader { display: none !important; }
+
     /* Show dive images to print */
     #diveImages * {
         display: flex !important;
     }
 
     #diveImages {
+        overflow: visible !important;
         max-width: 100% !important;
     }
 
@@ -176,6 +511,11 @@ body:not(:has(input[id="showImage"]:checked)) #diveImages * {
         border-top: 1px solid black !important;
         border-bottom: none !important;
         padding-bottom: 1px !important; /* Prevent divider from getting clipped */
+    }
+
+    /* Dividers are top borders, and no border between page seams */
+    #diveImages > div > img {
+        max-height: calc(100% - 2px) !important;
     }
 
     /* Keep the number circle off the page's edge */
@@ -195,22 +535,22 @@ body:not(:has(input[id="showImage"]:checked)) #diveImages * {
     /* Yes, this is the best way to do this with CSS */
     #diveImages[data-rows="2"] > div {
         &:nth-child(2n+1) { border-top: none !important; } /* Page-first row: no divider on the seam */
-        &:nth-child(2n):not(:last-child) { page-break-after: always !important; }
+        &:nth-child(2n):not(:last-child) { page-break-after: always; }
     }
     #diveImages[data-rows="3"] > div {
         &:nth-child(3n+1) { border-top: none !important; }
-        &:nth-child(3n):not(:last-child) { page-break-after: always !important; }
+        &:nth-child(3n):not(:last-child) { page-break-after: always; }
     }
     #diveImages[data-rows="4"] > div {
         &:nth-child(4n+1) { border-top: none !important; }
-        &:nth-child(4n):not(:last-child) { page-break-after: always !important; }
+        &:nth-child(4n):not(:last-child) { page-break-after: always; }
     }
     #diveImages[data-rows="5"] > div {
         &:nth-child(5n+1) { border-top: none !important; }
-        &:nth-child(5n):not(:last-child) { page-break-after: always !important; }
+        &:nth-child(5n):not(:last-child) { page-break-after: always; }
     }
     #diveImages[data-rows="6"] > div {
         &:nth-child(6n+1) { border-top: none !important; }
-        &:nth-child(6n):not(:last-child) { page-break-after: always !important; }
+        &:nth-child(6n):not(:last-child) { page-break-after: always; }
     }
 }
