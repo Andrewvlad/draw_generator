@@ -23,14 +23,14 @@
     </select>
 
     <input type="checkbox" id="useOutdoor" onchange="changePool()" hidden>
-    <label for="useOutdoor">Use outdoor?</label>
+    <label for="useOutdoor">Outdoor?</label>
     <br>
 
-    <label for="numDives">Number of dives:</label>
+    <label for="numDives">Dives:</label>
     <input id="numDives" type="number" min="1" max="99" value="10" required> <!--Don't reload on change, as it shifts page-->
     <br>
 
-    <label for="points">Number of points:</label>
+    <label for="points">Points:</label>
     <select id="points" onchange="addToPage()">
         <option value="3">3 - 4</option>
         <option value="4">4 - 5</option>
@@ -87,8 +87,8 @@
 
     <div> <!--Display settings buttons-->
         <label>Settings:
-            <button type="button" id="moreSettings" onclick="incrementSettings()">▼ More</button>
             <button type="button" id="lessSettings" onclick="decrementSettings()" disabled>▲ Less</button>
+            <button type="button" id="moreSettings" onclick="incrementSettings()">▼ More</button>
         </label>
     </div>
 
