@@ -15,7 +15,7 @@
     --accent-soft: #e8f2ff;
     --bad: #e5484d;
     --radius: 8px;
-    --drawer-width: 320px;
+    --drawer-size: 320px;
 
     /* Fonts */
     --sans: -apple-system, system-ui, "Segoe UI", Roboto, Arial, sans-serif;
@@ -224,7 +224,7 @@ header {
 
 main {
     display: grid;
-    grid-template-columns: var(--drawer-width) 1fr;
+    grid-template-columns: var(--drawer-size) 1fr;
     grid-template-rows: minmax(0, 1fr); /* Without this the implicit row grows to fit content. Needed for scrolling */
     transition: grid-template-columns 0.25s;
 
@@ -335,11 +335,6 @@ main {
             ol {
                 padding-left: 2rem;
 
-                /* Since mobile does not have a scrollbar, it needs more padding */
-                @media (min-width: 1024px) {
-                    padding-left: 1rem;
-                }
-
                 li {
                     padding-top: 0.25rem;
                 }
@@ -352,7 +347,7 @@ main {
             font-size: 40px;
             color: #ffffff;
             background: var(--foreground);
-            width: 60px;
+            width: var(--counter-size);
             aspect-ratio: 1;
             display: grid;
             place-items: center;
@@ -364,6 +359,15 @@ main {
         }
 
         #diveImages {
+            --counter-size: 60px;
+
+            /* Adjust row height to fit the shortest row, by using width (see below) */
+            --images-per-row: 1;
+            &:has(> div > img:nth-of-type(2)) { --images-per-row: 2; }
+            &:has(> div > img:nth-of-type(3)) { --images-per-row: 3; }
+            &:has(> div > img:nth-of-type(4)) { --images-per-row: 4; }
+            &:has(> div > img:nth-of-type(5)) { --images-per-row: 5; }
+
             overflow-y: auto;
             scrollbar-gutter: stable both-edges;
         }
@@ -380,8 +384,8 @@ main {
         }
 
         #diveImages > div > img {
-            min-width: 0; /* Images scale to fit */
-            max-width: 100%;
+            /* Adjust row height to fit the shortest row, by using width */
+            max-width: calc((100% - var(--counter-size)) / var(--images-per-row));
             max-height: 300px;
             background: #ffffff;
             margin: 0 auto; /* Center horizontally within div */
@@ -467,6 +471,47 @@ footer {
     transition: none !important;
 }
 
+/* -------------- */
+/* Mobile support */
+/* -------------- */
+
+/* TODO: Resolve mobile padding (no scrollbar gutter) */
+
+@media (max-width: 600px) {
+    /* Drawer slides up from the bottom, overlaying the preview */
+    main {
+        grid-template-columns: 1fr; /* Drawer is out of flow, section takes the width (needed for scroll) */
+        position: relative; /* Anchor the drawer above the footer */
+        overflow: hidden; /* Clip the drawer while off-screen */
+
+        aside {
+            position: absolute;
+            inset: auto 0 0; /* Pinned to the bottom, full width */
+            max-height: 75%;
+            background: var(--background);
+            border-right: none; /* Offscreen so no-op, but it is proper */
+            border-top: 1px solid var(--border);
+            border-radius: 16px 16px 0 0;
+            box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.1); /* Side effect - gives the footer a nice shadow */
+            transition: transform 0.25s;
+
+            /* Hide the padding on the bottom */
+            padding-bottom: 0;
+
+            /* Hide the border on the last section of settings (crowded with footer border) */
+            details:last-child { border-bottom: none }
+        }
+
+        &:has(> aside[inert]) {
+            grid-template-columns: 1fr; /* Override */
+
+            aside {
+                transform: translateY(100%);
+            }
+        }
+    }
+}
+
 /* ----- */
 /* Print */
 /* ----- */
@@ -513,8 +558,8 @@ footer {
         padding-bottom: 1px !important; /* Prevent divider from getting clipped */
     }
 
-    /* Dividers are top borders, and no border between page seams */
     #diveImages > div > img {
+        max-width: 100% !important; /* [CHECK FOR REDUNDANCY] */
         max-height: calc(100% - 2px) !important;
     }
 
