@@ -19,7 +19,7 @@
 
     /* Fonts */
     --sans: -apple-system, system-ui, "Segoe UI", Roboto, Arial, sans-serif;
-    --mono: ui-monospace, "Courier New", monospace;
+    --mono: ui-monospace, monospace;
 }
 
 * {
@@ -63,10 +63,6 @@ body:has(button[id="showImages"][aria-pressed="true"]) #dives {
     display: none;
 }
 
-input:invalid {
-    border: 2px solid #e5484d;
-}
-
 /* --------------- */
 /* Utility Classes */
 /* --------------- */
@@ -96,6 +92,11 @@ select, input[type="number"] {
     border: 1px solid var(--border-strong);
     border-radius: var(--radius);
 
+    /* Not global since we it to disappear when edit mode is off */
+    &:invalid {
+        border: 2px solid var(--bad);
+    }
+
     &:focus-visible {
         outline: 2px solid var(--accent);
     }
@@ -108,6 +109,7 @@ select, input[type="number"] {
 button.icon {
     width: 34px;
     height: 34px;
+    display: grid; /* Needed for Firefox to center icon */
     place-items: center;
     border: none;
     border-radius: var(--radius);
@@ -118,9 +120,10 @@ button.icon {
         color: var(--text);
     }
 
+    /* AFTER the hover rule so a pressed toggle keeps its accent, regardless of hover */
     &[aria-pressed="true"] {
+        border: 1px solid var(--accent);
         background: var(--accent-soft);
-        border-color: var(--accent);
         color: var(--accent);
     }
 
@@ -190,7 +193,7 @@ button.icon {
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
-        &:hover {
+        &:hover:not(:disabled) {
             color: var(--text);
             font-weight: 600;
         }
@@ -310,7 +313,7 @@ main {
             padding: 12px 18px;
             display: inline-flex;
             align-items: center;
-            gap: 4px; /* Space between header and edit button */
+            gap: 6px; /* Space between header and edit button */
 
             h2 {
                 font-weight: 500;
@@ -323,23 +326,107 @@ main {
             border-bottom: 1px solid var(--border);
         }
 
-        #dives {
-            font-family: var(--mono) monospace;
-            overflow-y: auto;
-            scrollbar-gutter: stable both-edges;
+        /* Styles for both previews */
+        #previewHeader ~ * {
+            /* TODO: Consider a grey background */
+            padding: 0.5rem 1rem;
 
+            overflow-y: auto;
+            scrollbar-gutter: stable;
+        }
+
+        /* ------------ */
+        /* Text Preview */
+        /* ------------ */
+
+        /* Design requirement: Selecting rows should provide the same output as the clipboard button */
+        #dives {
+            /* TODO: Consider horizontal borders between dives */
             * {
                 user-select: text;
+                font-family: var(--mono), monospace;
             }
 
             ol {
-                padding-left: 2rem;
+                width: fit-content;
+                padding: 0;
+                list-style: none;
+                counter-reset: dive-number;
+            }
 
-                li {
-                    padding-top: 0.25rem;
+            li {
+                counter-increment: dive-number;
+                padding-top: 0.25rem;
+                white-space: nowrap; /* A row scrolls rather than wraps */
+
+                &::before {
+                    content: counter(dive-number);
+                    display: inline-block;
+                    vertical-align: middle;
+                    width: 2ch;
+                    padding-right: 8px;
+                    margin-right: 8px;
+                    border-right: 2px solid transparent; /* Reserved (invalid bar) */
+                    color: var(--muted);
+                    font-size: 13px;
+                    text-align: right;
                 }
+
+                /* Color invalid bar */
+                &.invalid::before {border-right-color: var(--bad)}
+            }
+
+            .slot {
+                /* Real text rather than a pseudo-element so a manual selection picks them up (commas) */
+                .sep {
+                    display: inline-block;
+                    vertical-align: middle;
+                    color: var(--muted);
+                    visibility: hidden; /* Hidden so the columns still line up */
+
+                    /* Space padding (" " after each comma, for when manually copying) */
+                    .pad {
+                        position: absolute;
+                        white-space: pre;
+                    }
+                }
+
+                /* Only show comma between non-empty cells */
+                &:has(~ .slot > .cell:not(:empty)) > .cell:not(:empty) + .sep {visibility: visible}
+            }
+
+            .cell {
+                display: inline-block;
+                align-content: center; /* Center text content vertically */
+                vertical-align: middle;
+                width: 3ch;
+                aspect-ratio: 1;
+                padding-right: 1px; /* Prevents highlighting from getting morphed by border */
+                border: 1px dashed transparent; /* Reserved (edit toggle doesn't cause shift) */
+                border-radius: 6px;
+                text-align: right;
+                text-transform: uppercase;
+                overflow: hidden;
+
+                &:focus-visible {
+                    outline: 2px solid var(--accent);
+                    outline-offset: -1px; /* Outline covers the dashed border */
+                }
+
+                /* Invalid text turns red */
+                &.invalid {color: var(--bad)}
+            }
+
+            /* Only paint border during edit mode */
+            body:has(#editToggle[aria-pressed="true"]) & {
+                .cell {border-color: var(--border-strong)}
+                .cell.invalid {border-color: var(--bad)}
             }
         }
+
+        /* ------------- */
+        /* Image Preview */
+        /* ------------- */
 
         /* Counter before each dive */
         #diveImages > div::before {
@@ -367,9 +454,6 @@ main {
             &:has(> div > img:nth-of-type(3)) { --images-per-row: 3; }
             &:has(> div > img:nth-of-type(4)) { --images-per-row: 4; }
             &:has(> div > img:nth-of-type(5)) { --images-per-row: 5; }
-
-            overflow-y: auto;
-            scrollbar-gutter: stable both-edges;
         }
 
         #diveImages > div {
@@ -475,8 +559,6 @@ footer {
 /* Mobile support */
 /* -------------- */
 
-/* TODO: Resolve mobile padding (no scrollbar gutter) */
-
 @media (max-width: 600px) {
     /* Drawer slides up from the bottom, overlaying the preview */
     main {
@@ -545,6 +627,7 @@ footer {
     }
 
     #diveImages {
+        padding: 0 !important;
         overflow: visible !important;
         max-width: 100% !important;
     }

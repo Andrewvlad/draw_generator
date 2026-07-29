@@ -14,14 +14,89 @@ const pointValue = (point) => Number.isInteger(point) ? 2 : 1;
 
 const transitionKey = (from, to) => `${from}>${to}`;
 
-// For HTML display
-const listDives = (arr) => typeof arr === 'string' ? generatedDives : "<ol>"
-    + (arr.map(dive => `<li>${dive.join(', ')}</li>`)).join('')
-    + "</ol>";
+// The last formation loops back to the start, so a dive's transitions wrap (using remainder to loop)
+const diveTransitions = (dive) => dive.map((point, i) => transitionKey(point, dive[(i + 1) % dive.length]));
 
-const divesAsImages = (arr) => typeof arr === 'string' ? '' : (arr.map(dive =>
-        `<div>${dive.map(point => `<img src="${imagePaths[point]}" class="diagram" alt="${point}">`).join('')}</div>`
-    )).join('');
+/** HTML display **/
+const listDives = (dives, slots = 5) => {
+    if (typeof dives === 'string') return dives; // Exit early if it's an error string
+
+    // Real text so manual copying picks up trailing comma and single space (hidden if neighbor empty)
+    const SEPARATOR = '<span class="sep">,<span class="pad"> </span></span>';
+
+    // Create empty slots for user to fill-in
+    const paddedDive = (dive) => Array.from({length: slots}, (_, i) => dive[i] ?? '');
+
+    const slotHTML = (point) => `<span class="slot"><span class="cell">${point}</span>${SEPARATOR}</span>`;
+    const rowHTML = (dive) => `<li>${paddedDive(dive).map(slotHTML).join('')}</li>`;
+
+    return `<ol>${dives.map(rowHTML).join('')}</ol>`;
+};
+
+const divesAsImages = (dives) => {
+    if (typeof dives === 'string') return ''; // Exit early if it's an error string
+
+    // Filters out invalid images
+    const imageHTML = (point, src = imagePaths[point]) => src && `<img src="${src}" alt="${point}">`;
+    const imageRowHTML = (dive) => `<div>${dive.map(point => imageHTML(point)).join('')}</div>`;
+
+    return dives.map(imageRowHTML).join('');
+};
+
+// Plain text for the clipboard, without hidden commas
+const divesAsText = (dives) => {
+    if (typeof dives === 'string') return dives; // Exit early if it's an error string
+
+    return dives.map(dive => dive.join(", ")).join("\n");
+};
+
+// Rule violations per cell and per dive, for the edit mode highlighting
+// Invalidation can only occur due to edit, so technically can be scoped to per-cell edit, instead of against the
+//  whole dive each edit. However, it's an unnecessary optimization and headache to manage while still adding features
+const validateDraw = (dives, {
+    minPoints = 3,
+    uniqueExits = false,
+    uniqueTransitions = false,
+    useRandoms = true,
+    useBlocks = true,
+}) => {
+    const exits = new Map();
+    const transitions = new Map();
+
+    const tally = (counts, key) => counts.set(key, (counts.get(key) ?? 0) + 1);
+    const inPool = (point) => (useRandoms && randoms.includes(point)) || (useBlocks && blocks.includes(point));
+
+    // Tally up each dive's exit and transitions
+    // Done up front instead of during the invalidation check, so it doesn't have to backtrack for matching invalidation
+    dives.forEach(dive => {
+        if (uniqueExits && dive.length) tally(exits, dive[0]);
+        if (uniqueTransitions && dive.length > 1) diveTransitions(dive).forEach(key => tally(transitions, key));
+    });
+
+    // Invalidate cells (and their matching pair if appropriate)
+    return dives.map(dive => { // For each dive:
+        let curPoints = 0;
+
+        const cells = dive.map((point, i) => { // For each point:
+            const invalid = !inPool(point) // If outside of dive pool
+                || dive.indexOf(point) !== dive.lastIndexOf(point) // If it occurs multiple times in the same dive
+                || curPoints >= minPoints // Cell exceeds point cap
+                || (uniqueExits && !i && exits.get(point) > 1) // Check exits (only if first point in the dive)
+                // Check transitions
+                || (uniqueTransitions && dive.length > 1 && transitions.get(transitionKey(dive.at(i - 1), point)) > 1);
+
+            // Count total points (to prevent too few points)
+            curPoints += pointValue(point); // Cannot increment first, since generation stops after satisfying min point
+
+            return invalid;
+        });
+
+        return {
+            cells, // Mark invalid cells
+            invalid: curPoints < minPoints || cells.some(Boolean), // Mark invalid rows (also too few points)
+        };
+    });
+};
 
 const main = ({
     numDives = 10,
@@ -107,7 +182,7 @@ const main = ({
         exits.add(newDive[0]);
 
         // Add transitions
-        newDive.forEach((point, i) => transitions.add(transitionKey(point, newDive[(i + 1) % newDive.length])));
+        diveTransitions(newDive).forEach(transition => transitions.add(transition));
     }
 
     return dives;
