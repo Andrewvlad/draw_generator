@@ -16,6 +16,7 @@
     --bad: #e5484d;
     --radius: 8px;
     --drawer-size: 320px;
+    --drawer-default: open; /* Read by at boot */
 
     /* Fonts */
     --sans: -apple-system, system-ui, "Segoe UI", Roboto, Arial, sans-serif;
@@ -560,6 +561,9 @@ footer {
 /* -------------- */
 
 @media (max-width: 600px) {
+    /* The drawer starts closed */
+    :root {--drawer-default: collapsed}
+
     /* Drawer slides up from the bottom, overlaying the preview */
     main {
         grid-template-columns: 1fr; /* Drawer is out of flow, section takes the width (needed for scroll) */

@@ -115,6 +115,16 @@
             </div>
         </details>
     </aside>
+    <!--Start drawer collapsed on mobile devices. Before first paint to prevent flash-->
+    <script>
+        if (getComputedStyle(document.documentElement).getPropertyValue('--drawer-default') === 'collapsed') {
+            const drawer = document.getElementById('settingsDrawer');
+            drawer.classList.add('noTransition'); // Disable transitions
+            drawer.inert = true;
+            drawer.offsetHeight; // Trigger a reflow, flushing the CSS changes
+            drawer.classList.remove('noTransition'); // Re-enable transitions
+        }
+    </script>
 
     <!--Draw display-->
     <section>
@@ -184,6 +194,9 @@
     // Settings drawer toggle
     const settingsToggle = document.getElementById('settingsToggle');
     const settingsDrawer = document.getElementById('settingsDrawer');
+
+    // Sync with initial --drawer-default value
+    settingsToggle.setAttribute('aria-expanded', !settingsDrawer.inert);
 
     settingsToggle.addEventListener('click', () => {
         settingsDrawer.inert = !settingsDrawer.inert;
