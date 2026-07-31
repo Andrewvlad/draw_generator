@@ -208,12 +208,30 @@
     const previewSegment = document.getElementById('previewSegment');
     const showImages = document.getElementById('showImages');
 
+    // Because the segments don't have uniform widths, the thumb needs to resize mid-animation
+    function syncThumb(segmentedControl) {
+        // Rects over offsetLeft/offsetWidth since rounding missaligns the thumb
+        const selected = segmentedControl.querySelector('[aria-pressed="true"]').getBoundingClientRect();
+        const track = segmentedControl.getBoundingClientRect();
+        segmentedControl.style.setProperty("--thumb-x", `${selected.left - track.left}px`);
+        segmentedControl.style.setProperty("--thumb-w", `${selected.width}px`);
+    }
+
+    // Seed so that the initial segmented value does not animate on first paint
+    document.querySelectorAll(".segmentedControl").forEach(segmentedControl => {
+        syncThumb(segmentedControl);
+        getComputedStyle(segmentedControl, "::before").width; // Flush, so the seeded box is the transition's start point
+        segmentedControl.dataset.ready = ""; // Enable the animation
+    });
+
     function selectInclude(value) {
         includeSegment.querySelectorAll("button").forEach(btn => btn.setAttribute("aria-pressed", btn.dataset.include === value));
+        syncThumb(includeSegment);
     }
 
     function selectPreview(value) {
         previewSegment.querySelectorAll("button").forEach(btn => btn.setAttribute("aria-pressed", btn.dataset.view === value));
+        syncThumb(previewSegment);
     }
 
     includeSegment.querySelectorAll("button").forEach(btn => btn.addEventListener("click", () => {

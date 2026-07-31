@@ -8,7 +8,7 @@
     --foreground: #171717;
     --bg: #f4f5f7;
     --border: #e2e5ea;
-    --border-strong: #cdd2da;
+    --track: #d9dce3;
     --text: #1b1f24;
     --muted: #6b7280;
     --accent: #1e90ff;
@@ -90,7 +90,7 @@ select, input[type="number"] {
     min-width: max-content;
     padding: 8px;
     background: #ffffff;
-    border: 1px solid var(--border-strong);
+    border: 1px solid var(--track);
     border-radius: var(--radius);
 
     /* Not global since we it to disappear when edit mode is off */
@@ -116,9 +116,11 @@ button.icon {
     border-radius: var(--radius);
     color: var(--muted);
 
-    &:hover {
-        background: var(--bg);
-        color: var(--text);
+    @media (hover: hover) {
+        &:hover:not(:disabled) {
+            background: var(--bg);
+            color: var(--text);
+        }
     }
 
     /* AFTER the hover rule so a pressed toggle keeps its accent, regardless of hover */
@@ -140,7 +142,7 @@ button.icon {
     height: 24px;
     position: relative;
     border-radius: 40px;
-    background: var(--border-strong);
+    background: var(--track);
     transition: 0.25s;
 
     &::after {
@@ -152,6 +154,7 @@ button.icon {
         height: 18px;
         border-radius: 50%;
         background: #ffffff;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18), 0 0 1px rgba(0, 0, 0, 0.1);
         transition: 0.25s;
     }
 
@@ -170,39 +173,73 @@ button.icon {
 }
 
 .segmentedControl {
-    display: inline-flex;
-    gap: 1px;
-    padding: 3px;
-    background: var(--bg);
-    border: 1px solid var(--border);
+    /* Thumb = selected segment */
+    /* Thumb's dimensions & position (variable since segments are not of equal width) */
+    --thumb-x: 0px;
+    --thumb-w: 0px;
+    --thumb-inset: 3px;
+
+    /* Thumb evenly rounded inside parent */
+    --thumb-radius: calc(var(--radius) - var(--thumb-inset));
+
+    /* 2.5% spring overshoot */
+    --thumb-spring: linear(0, 0.121, 0.358, 0.593, 0.779, 0.903, 0.977, 1.012, 1.025, 1.025, 1.02, 1.013, 1.008, 1.004, 1.001, 1);
+
+    position: relative;
+    display: inline-flex; /* Segments size to their own label */
+    padding: var(--thumb-inset);
+    background: var(--track);
     border-radius: var(--radius);
-    overflow: hidden;
+
+    /* Thumb settings */
+    /* Sliding tile, instead of background change, to allow for animation */
+    &::before {
+        content: "";
+        position: absolute;
+        top: var(--thumb-inset);
+        bottom: var(--thumb-inset);
+        left: 0;
+        width: var(--thumb-w);
+        border-radius: var(--thumb-radius);
+        background: #ffffff;
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12), 0 1px 1px rgba(0, 0, 0, 0.06);
+        transform: translateX(var(--thumb-x));
+    }
+
+    /* No animation until the script has added the thumb */
+    &[data-ready]::before {
+        transition: transform 270ms var(--thumb-spring), width 270ms var(--thumb-spring);
+    }
 
     button {
-        flex: 1;
+        position: relative; /* Paints OVER the thumb, so the hover styling cascades */
         padding: 6px 12px;
         border: none;
-        border-radius: 6px; /* Rounded corners */
+        border-radius: var(--thumb-radius);
         color: var(--muted);
         font-size: 13px;
         white-space: nowrap;
 
-        &[aria-pressed="true"] {
-            background: #ffffff;
-            color: var(--text);
-            font-weight: 600;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        /* Darken the text on press (same duration as the thumb's transition) */
+        transition: color 270ms ease;
+        &[aria-pressed="true"] {color: var(--text)}
+
+        @media (hover: hover) {
+            &:hover:not(:disabled) {background: rgba(0, 0, 0, 0.04)}
         }
 
-        &:hover:not(:disabled) {
-            color: var(--text);
-            font-weight: 600;
-        }
+        /* MUST have :not([aria-pressed="true"]) to prevent the wash (highlight) from lingering on touch/mobile */
+        &:active:not(:disabled):not([aria-pressed="true"]) {background: rgba(0, 0, 0, 0.08)}
 
-        &:disabled {
-            opacity: 0.5;
-        }
+        &:focus-visible {outline: 2px solid var(--accent)}
+
+        &:disabled {opacity: 0.4}
     }
+}
+
+/* Disable for those with reduce motion enabled */
+@media (prefers-reduced-motion: reduce) {
+    .segmentedControl[data-ready]::before {transition: none}
 }
 
 /* ------ */
@@ -420,7 +457,7 @@ main {
 
             /* Only paint border during edit mode */
             body:has(#editToggle[aria-pressed="true"]) & {
-                .cell {border-color: var(--border-strong)}
+                .cell {border-color: var(--track)}
                 .cell.invalid {border-color: var(--bad)}
             }
         }
@@ -514,8 +551,8 @@ footer {
         border: 1px solid var(--border);
         color: var(--muted);
 
-        &:hover {
-            color: var(--text);
+        @media (hover: hover) {
+            &:hover:not(:disabled) {color: var(--text)}
         }
 
         svg {
