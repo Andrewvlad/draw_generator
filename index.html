@@ -24,7 +24,7 @@
 <main>
 <!--Settings drawer-->
     <aside id="settingsDrawer">
-        <details open>
+        <details id="setup-section" open>
             <summary>
                 Setup
                 <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
@@ -58,7 +58,7 @@
                 </div>
             </div>
         </details>
-        <details open>
+        <details id="constraints-section" open>
             <summary>
                 Constraints
                 <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
@@ -85,7 +85,7 @@
 
             </div>
         </details>
-        <details>
+        <details id="print-section">
             <summary>
                 Print
                 <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
@@ -115,6 +115,48 @@
             </div>
         </details>
     </aside>
+    <!--Restore saved settings before first paint so sections and segmented control thumb don't flash-->
+    <script>
+        const STORAGE_KEY = "drawGenerator";
+
+        // Every control in the drawer and respective section's collapsed state
+        const persistedElements = () => document.querySelectorAll("#settingsDrawer :is(details, input, select)");
+
+        // Derive state
+        const stateKey = (element) =>
+            element.type === "checkbox" ? "checked"
+            : element.tagName === "DETAILS" ? "open" : "value";
+
+        function restoreSettings() {
+            let stored = {};
+
+            // Error -> restore defaults (defined in HTML)
+            try {stored = JSON.parse(localStorage.getItem(STORAGE_KEY)) ?? {}} catch {}
+
+            persistedElements().forEach(element => {
+                if (!(element.id in stored)) return;
+
+                const key = stateKey(element);
+
+                if (key !== "value") {
+                    element[key] = stored[element.id] === true;
+                    return;
+                }
+
+                // Out-of-range/invalid falls back to default
+                const fallback = element.value;
+                element.value = stored[element.id];
+                if (!element.value || !element.checkValidity()) element.value = fallback;
+            });
+
+            // Segmented controls are custom elements (use buttons) and therefore must be manually assigned
+            const includeButtons = document.querySelectorAll("#includeSegment button");
+            if ([...includeButtons].some(button => button.dataset.include === stored.include))
+                includeButtons.forEach(button => button.ariaPressed = button.dataset.include === stored.include);
+        }
+
+        restoreSettings();
+    </script>
     <!--Start drawer collapsed on mobile devices. Before first paint to prevent flash-->
     <script>
         if (getComputedStyle(document.documentElement).getPropertyValue('--drawer-default') === 'collapsed') {
@@ -165,25 +207,27 @@
 </script>
 <!--Switch between image sets-->
 <script>
-    let imagePaths = imagePaths4Way; // Used by divesAsImages()
+    let imagePaths; // Used by divesAsImages()
     const divePool = document.getElementById("divePool");
     const outdoorDiv = document.getElementById("outdoorDiv");
     const useOutdoor = document.getElementById("useOutdoor");
 
-    // Hide/show toggle initially
-    outdoorDiv.style.display = divePool.value === "8-way_fs" ? "" : "none";
+    // Image set per discipline, and whether it offers an outdoor variant
+    const DISCIPLINES = {
+        "4-way_fs": {images: () => imagePaths4Way},
+        "8-way_fs": {images: () => useOutdoor.checked ? imagePaths8WayOutdoor : imagePaths8Way, hasOutdoor: true},
+    };
+
+    function syncPool() {
+        const discipline = DISCIPLINES[divePool.value];
+        outdoorDiv.style.display = discipline.hasOutdoor ? "" : "none";
+        imagePaths = discipline.images();
+    }
+
+    syncPool();
 
     function changePool() {
-        switch (divePool.value) {
-            case "4-way_fs":
-                outdoorDiv.style.display = "none";
-                imagePaths = imagePaths4Way;
-                break;
-            case "8-way_fs":
-                outdoorDiv.style.display = "";
-                imagePaths = useOutdoor.checked ? imagePaths8WayOutdoor : imagePaths8Way;
-                break;
-        }
+        syncPool();
 
         // Reload the images
         diveImages.innerHTML = divesAsImages(generatedDives);
@@ -242,6 +286,21 @@
     previewSegment.querySelectorAll("button").forEach(btn => btn.addEventListener("click", () => {
         selectPreview(btn.dataset.view);
     }));
+</script>
+<!--Settings persistence-->
+<script>
+    function saveSettings() {
+        const settings = {};
+        persistedElements().forEach(element => settings[element.id] = element[stateKey(element)]);
+        settings.include = includeSegment.querySelector('[aria-pressed="true"]').dataset.include;
+
+        try {localStorage.setItem(STORAGE_KEY, JSON.stringify(settings))} catch {} // Storage may be unavailable
+    }
+
+    // Save all setting changes
+    settingsDrawer.addEventListener("change", saveSettings);
+    settingsDrawer.addEventListener("toggle", saveSettings, true); // Toggle does not bubble, so it needs capture
+    includeSegment.addEventListener("click", saveSettings); // Segmented buttons are not form controls
 </script>
 <!--Dive settings-->
 <script>
@@ -454,6 +513,9 @@
 </script>
 <!--Initial render-->
 <script>
+    // Apply the print selects, since restoreSettings() populates them without firing onchange
+    setPaper(document.getElementById("paperSize").value);
+    setRows(document.getElementById("rowsPerPage").value);
     addToPage();
 </script>
 <noscript>To use this tool, please enable JavaScript.</noscript>

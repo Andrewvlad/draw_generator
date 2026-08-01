@@ -17,6 +17,7 @@ Hosted [here](https://andrewvlad.github.io/draw_generator/) on GitHub.
 - Perfectly random
 - Copy to clipboard
 - Export as PDF
+- Settings auto-saved
 - No duplicate points within the same dive
 - Keybindings
   - `[ENTER]` - Generate dives
