@@ -56,13 +56,9 @@ body > * {
     background: var(--background);
 }
 
-/* Hide dive images when showImages checkbox is unchecked */
-body:not(:has(button[id="showImages"][aria-pressed="true"])) #diveImages * {
-    display: none;
-}
-body:has(button[id="showImages"][aria-pressed="true"]) #dives {
-    display: none;
-}
+/* Hide dive images when showImages is unchecked */
+body:not(:has(#showImages:checked)) #diveImages * {display: none}
+body:has(#showImages:checked) #dives {display: none}
 
 /* --------------- */
 /* Utility Classes */
@@ -211,29 +207,37 @@ button.icon {
         transition: transform 270ms var(--thumb-spring), width 270ms var(--thumb-spring);
     }
 
-    button {
+    /* Don't show radio defaults */
+    input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none; /* Otherwise hidden radio eats clicks */
+    }
+
+    label {
         position: relative; /* Paints OVER the thumb, so the hover styling cascades */
         padding: 6px 12px;
-        border: none;
         border-radius: var(--thumb-radius);
         color: var(--muted);
         font-size: 13px;
         white-space: nowrap;
+        cursor: pointer;
 
         /* Darken the text on press (same duration as the thumb's transition) */
         transition: color 270ms ease;
-        &[aria-pressed="true"] {color: var(--text)}
+        &:has(+ :checked) {color: var(--text)}
+
+        &:has(+ :focus-visible) {outline: 2px solid var(--accent)}
+
+        /* pointer-events also suppresses the hover and press styling */
+        &:has(+ :disabled) {opacity: 0.4; pointer-events: none}
 
         @media (hover: hover) {
-            &:hover:not(:disabled) {background: rgba(0, 0, 0, 0.04)}
+            &:hover {background: rgba(0, 0, 0, 0.04)}
         }
 
-        /* MUST have :not([aria-pressed="true"]) to prevent the wash (highlight) from lingering on touch/mobile */
-        &:active:not(:disabled):not([aria-pressed="true"]) {background: rgba(0, 0, 0, 0.08)}
-
-        &:focus-visible {outline: 2px solid var(--accent)}
-
-        &:disabled {opacity: 0.4}
+        /* MUST exclude the checked segment to prevent the wash (highlight) from lingering on touch/mobile */
+        &:active:has(+ :not(:checked)) {background: rgba(0, 0, 0, 0.08)}
     }
 }
 
