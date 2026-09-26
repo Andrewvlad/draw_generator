@@ -351,6 +351,7 @@ main {
         grid-template-rows: auto minmax(0, 1fr); /* Header, then the scrolling preview */
 
         #previewHeader {
+            position: relative; /* Anchor for the edit tools */
             width: 100%;
             padding: 12px 18px;
             display: inline-flex;
@@ -366,6 +367,84 @@ main {
             }
 
             border-bottom: 1px solid var(--border);
+
+            /* Edit tools */
+            /* Wedge hanging off the header's right end while editing */
+            #edit-tools {
+                --slant-width: 12px;
+
+                position: absolute;
+                top: calc(100% + 1px); /* Below the header's border */
+                right: 0;
+                overflow: clip;
+                visibility: hidden;
+                transition: 0.25s;
+
+                /* Only while editing a draw */
+                section:has(.cell) #editToggle[aria-pressed="true"] ~ & {
+                    visibility: visible;
+
+                    > div {transform: none}
+                }
+
+                @media (prefers-reduced-motion: reduce) {transition: none}
+
+                /* Tucked behind the header and clipped so it drops out from below */
+                > div {
+                    position: relative; /* Anchor for the slant border */
+                    display: grid;
+                    padding: 2px 2px 2px var(--slant-width);
+                    background: var(--background);
+                    border-bottom: var(--border) 1px solid;
+                    clip-path: polygon(0 0, 100% 0, 100% 100%, var(--slant-width) 100%);
+                    transform: translateY(-100%);
+                    transition: 0.25s;
+
+                    @media (prefers-reduced-motion: reduce) {transition: none}
+
+                    /* Slant border */
+                    /* Fills up to 1px inside the slant while the wedge's clip trims off the rest */
+                    &::before {
+                        content: "";
+                        position: absolute;
+                        inset: 0 0 -1px; /* Connect to the bottom border */
+                        z-index: -1; /* Under the buttons */
+                        background: var(--border);
+                        clip-path: polygon(0 0, 1px 0, calc(var(--slant-width) + 1px) 100%, 0 100%);
+                    }
+                }
+
+                button {
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    padding: 4px 8px;
+                    border: 1px solid transparent; /* Reserved border */
+                    border-radius: var(--radius);
+                    color: var(--text);
+                    font-size: 13px;
+
+                    @media (hover: hover) {
+                        &:hover {background: rgba(0, 0, 0, 0.04)}
+                    }
+
+                    &:active {background: rgba(0, 0, 0, 0.08)}
+
+                    /* AFTER hover and active (same specificity) so a pressed toggle keeps its accent */
+                    &[aria-pressed="true"] {
+                        border-color: var(--accent);
+                        background: var(--accent-soft);
+                        color: var(--accent);
+                    }
+
+                    &:focus-visible {outline: 2px solid var(--accent)}
+
+                    svg {
+                        width: 16px;
+                        height: 16px;
+                    }
+                }
+            }
         }
 
         /* Styles for both previews */
@@ -609,11 +688,13 @@ footer {
     main {
         grid-template-columns: 1fr; /* Drawer is out of flow, section takes the width (needed for scroll) */
         position: relative; /* Anchor the drawer above the footer */
+        isolation: isolate; /* Keeps the drawer's z-index below the toast */
         overflow: hidden; /* Clip the drawer while off-screen */
 
         aside {
             position: absolute;
             inset: auto 0 0; /* Pinned to the bottom, full width */
+            z-index: 1; /* Over the edit tools */
             max-height: 75%;
             background: var(--background);
             border-right: none; /* Offscreen so no-op, but it is proper */

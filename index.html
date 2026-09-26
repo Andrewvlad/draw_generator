@@ -185,6 +185,19 @@
                 <label for="showImages">Images</label>
                 <input type="radio" name="preview" id="showImages" value="images">
             </div>
+            <!--Edit tools-->
+            <div id="edit-tools" role="group" aria-label="Edit tools">
+                <div>
+                    <button type="button" id="lock-toggle" aria-pressed="false">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        Lock
+                    </button>
+                    <button type="button" onclick="clearDives()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        Clear
+                    </button>
+                </div>
+            </div>
         </div>
         <div id="dives"></div>
         <!--Hidden HTML element (for CSS to consume during print)-->
@@ -354,6 +367,23 @@
     function setEditable() {
         const editing = editToggle.ariaPressed === "true";
         diveList.querySelectorAll(".cell").forEach(cell => cell.contentEditable = editing ? "plaintext-only" : "false");
+    }
+
+    // Lock toggle
+    // TODO: Implement locking
+    const lockToggle = document.getElementById("lock-toggle");
+
+    lockToggle.addEventListener("click", () => {
+        lockToggle.ariaPressed = lockToggle.ariaPressed !== "true";
+    });
+
+    // Clear all the cells
+    function clearDives() {
+        diveList.querySelectorAll(".cell").forEach(cell => cell.textContent = "");
+        syncEdits();
+
+        // Rebuild here, since the focusout rebuild only follows typing
+        diveImages.innerHTML = divesAsImages(generatedDives);
     }
 
     // On user input
