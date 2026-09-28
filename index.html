@@ -129,6 +129,7 @@
                 <div>
                     <label for="columns-per-page">Columns per page</label>
                     <select id="columns-per-page" onchange="setColumns(this.value)">
+                        <option value="auto" selected>Auto</option>
                         <option value="2">2</option>
                         <option value="3">3</option>
                         <option value="4">4</option>
@@ -138,7 +139,7 @@
                         <option value="8">8</option>
                         <option value="9">9</option>
                         <option value="10">10</option>
-                        <option value="11" selected>11</option>
+                        <option value="11">11</option>
                     </select>
                 </div>
             </div>
@@ -369,6 +370,7 @@
             diveImages.innerHTML = divesAsImages(generatedDives);
 
             setEditable();
+            syncColumns();
         }
     }
 </script>
@@ -524,6 +526,7 @@
     const PAPER_MM = { auto: [210, 279.4], Letter: [215.9, 279.4], A4: [210, 297], A5: [148, 210], Legal: [215.9, 355.6] }; // Portrait width and height
     const paperSize = document.getElementById("paperSize");
     const layoutColumns = document.getElementById("layout-columns");
+    const columnsPerPage = document.getElementById("columns-per-page");
     const pageSizeRule = document.getElementById("pageSizeRule");
 
     function setRows(value) {
@@ -532,7 +535,20 @@
     }
 
     function setColumns(value) {
-        diveImages.style.setProperty("--columns", value);
+        // Auto-fits the most dives, clamping at 11 (columnsPerPage)
+        const autoColumns = Math.min(diveImages.childElementCount, columnsPerPage.lastElementChild.value);
+        diveImages.style.setProperty("--columns", value === "auto" ? autoColumns : value);
+    }
+
+    // Gray-out counts past the draw, and send a pick past it back to Auto
+    function syncColumns() {
+        const diveCount = diveImages.childElementCount;
+        if (!diveCount) return; // A failed draw prints nothing, so the pick is kept
+
+        // Auto compares as NaN, so it never greys out
+        [...columnsPerPage.options].forEach(option => option.disabled = option.value > diveCount);
+        if (columnsPerPage.selectedOptions[0].disabled) columnsPerPage.value = "auto";
+        setColumns(columnsPerPage.value);
     }
 
     function setPage() {
@@ -578,8 +594,7 @@
     // Apply the print controls, since restoreSettings() populates them without firing onchange
     setPage();
     setRows(document.getElementById("rowsPerPage").value);
-    setColumns(document.getElementById("columns-per-page").value);
-    addToPage();
+    addToPage(); // Also runs setColumns()
 </script>
 <noscript>To use this tool, please enable JavaScript.</noscript>
 
