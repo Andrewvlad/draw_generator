@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>FS Dive Generator</title>
     <link rel="stylesheet" type="text/css" href="stylesheet.css">
-    <style id="pageSizeRule"></style> <!--JS injects @page{size:X} when a specific paper is chosen-->
+    <style id="pageSizeRule"></style> <!--JS injects @page{size:X} when a specific paper or the column layout is chosen-->
 </head>
 <body>
 
@@ -96,13 +96,23 @@
             <div class="section-body">
                 <div>
                     <label for="paperSize">Paper size</label>
-                    <select id="paperSize" onchange="setPaper(this.value)">
+                    <select id="paperSize" onchange="setPage()">
                         <option value="auto" selected>Auto</option>
                         <option value="Letter">Letter</option>
                         <option value="A4">A4</option>
                         <option value="A5">A5</option>
                         <option value="Legal">Legal</option>
                     </select>
+                </div>
+
+                <div>
+                    <label id="layout-label">Layout</label>
+                    <div class="segmentedControl" role="radiogroup" aria-labelledby="layout-label">
+                        <label for="layout-rows">Rows</label>
+                        <input type="radio" name="layout" id="layout-rows" value="rows" onchange="setPage()" checked>
+                        <label for="layout-columns">Columns</label>
+                        <input type="radio" name="layout" id="layout-columns" value="columns" onchange="setPage()">
+                    </div>
                 </div>
 
                 <div>
@@ -113,6 +123,22 @@
                         <option value="4" selected>4</option>
                         <option value="5">5</option>
                         <option value="6">6</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="columns-per-page">Columns per page</label>
+                    <select id="columns-per-page" onchange="setColumns(this.value)">
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                        <option value="10">10</option>
+                        <option value="11" selected>11</option>
                     </select>
                 </div>
             </div>
@@ -201,7 +227,7 @@
         </div>
         <div id="dives"></div>
         <!--Hidden HTML element (for CSS to consume during print)-->
-        <div id="diveImages" data-rows="4" style="--rows: 4; --paper-mm: 279.4mm"></div>
+        <div id="diveImages" data-rows="4" style="--rows: 4; --columns: 11; --page-height: 279.4mm"></div>
     </section>
 </main>
 
@@ -495,7 +521,9 @@
 </script>
 <!--Print layout-->
 <script>
-    const PAPER_MM = { Letter: 279.4, A4: 297, A5: 210, Legal: 355.6 }; // Portrait long-edge, mm
+    const PAPER_MM = { auto: [210, 279.4], Letter: [215.9, 279.4], A4: [210, 297], A5: [148, 210], Legal: [215.9, 355.6] }; // Portrait width and height
+    const paperSize = document.getElementById("paperSize");
+    const layoutColumns = document.getElementById("layout-columns");
     const pageSizeRule = document.getElementById("pageSizeRule");
 
     function setRows(value) {
@@ -503,12 +531,21 @@
         diveImages.style.setProperty("--rows", value); // For CSS calc (to determine page seams)
     }
 
-    function setPaper(value) {
-        // Row height/width defaults to Letter, unless manually defined
-        const paper = value === "auto" ? "Letter" : value;
-        diveImages.style.setProperty("--paper-mm", `${PAPER_MM[paper]}mm`);
+    function setColumns(value) {
+        diveImages.style.setProperty("--columns", value);
+    }
+
+    function setPage() {
+        const landscape = layoutColumns.checked; // Columns lie across a landscape page
+
+        // Row and column height follow the chosen paper, and Auto fits inside both Letter and A4
+        const [width, height] = PAPER_MM[paperSize.value];
+        diveImages.style.setProperty("--page-height", `${landscape ? width : height}mm`);
+
         // PDF size is derived from browser, unless manually defined
-        pageSizeRule.textContent = value === "auto" ? "" : `@page { size: ${value} }`;
+        const paper = paperSize.value === "auto" ? "" : paperSize.value;
+        const size = `${paper} ${landscape ? "landscape" : ""}`.trim();
+        pageSizeRule.textContent = size && `@page { size: ${size} }`;
     }
 </script>
 <!--Copy to clipboard & toast notification-->
@@ -538,9 +575,10 @@
 </script>
 <!--Initial render-->
 <script>
-    // Apply the print selects, since restoreSettings() populates them without firing onchange
-    setPaper(document.getElementById("paperSize").value);
+    // Apply the print controls, since restoreSettings() populates them without firing onchange
+    setPage();
     setRows(document.getElementById("rowsPerPage").value);
+    setColumns(document.getElementById("columns-per-page").value);
     addToPage();
 </script>
 <noscript>To use this tool, please enable JavaScript.</noscript>
