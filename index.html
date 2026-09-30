@@ -24,7 +24,6 @@
 <main>
 <!--Settings drawer-->
     <aside id="settingsDrawer">
-        <div id="drawer-resizer"></div>
         <details id="setup-section" open>
             <summary>
                 Setup
@@ -146,6 +145,7 @@
             </div>
         </details>
     </aside>
+    <div id="drawer-resizer"></div> <!--Outside the settingsDrawer, so it can be grabbed even when collapsed-->
     <!--Restore saved settings before first paint so sections and segmented control thumb don't flash-->
     <script>
         const STORAGE_KEY = "drawGenerator";
@@ -185,6 +185,16 @@
                 element.value = stored[element.id];
                 if (!element.value || !element.checkValidity()) element.value = fallback;
             });
+
+            // Apply localStorage drawer width size
+            if (stored.drawerSize > 0) {
+                // Transitions need to be toggled off for the initial load, otherwise the animation plays when importing width from localStorage (Firefox)
+                const mainElement = document.querySelector("main");
+                mainElement.classList.add("noTransition");
+                document.documentElement.style.setProperty("--drawer-size", `${stored.drawerSize}px`);
+                mainElement.offsetHeight; // Trigger a reflow
+                mainElement.classList.remove("noTransition");
+            }
         }
 
         restoreSettings();
@@ -335,7 +345,7 @@
         if (event.button !== 0) return;
 
         drawerResizer.setPointerCapture(event.pointerId); // Sets the cursor pointer, even when the drawer closes (but still dragging)
-        cursorToEdge = settingsDrawer.getBoundingClientRect().width - event.clientX; // Position of the cursor relative to the settings drawer
+        cursorToEdge = settingsDrawer.getBoundingClientRect().right - event.clientX; // Position of the cursor relative to the settings drawer
 
         // Find the min width of the settings drawer by its widest row (including non-visible rows)
         settingsDrawer.classList.add("measuring");
@@ -351,6 +361,7 @@
 
         const width = event.clientX + cursorToEdge;
         const open = width >= drawerMinWidth - SNAP_DISTANCE;
+        if (!open && settingsDrawer.inert) return; // Remain closed, unless SNAP_DISTANCE is overshot (also prevents taps on the drawer-resizer from setting to min-width)
         if (open === settingsDrawer.inert) toggleDrawer(); // Toggle the drawer if the cursor overshoots the SNAP_DISTANCE
         root.style.setProperty("--drawer-size", `${open ? width : drawerMinWidth}px`); // Floors the width at drawerMinWidth
     });
@@ -360,12 +371,22 @@
         if (!settingsDrawer.inert) root.style.setProperty("--drawer-size", `${settingsDrawer.getBoundingClientRect().width}px`);
         settingsDrawer.offsetHeight; // Flush while transitions are still off, so the swap doesn't animate
         root.classList.remove("resizing");
+        saveSettings();
+    });
+
+    // Double-clicking opens and resets a drawer to it's default width
+    drawerResizer.addEventListener("dblclick", () => {
+        root.style.removeProperty("--drawer-size");
+        if (settingsDrawer.inert) toggleDrawer();
+        saveSettings();
     });
 </script>
-<!--Settings persistence-->
+<!--Settings persistence (localStorage)-->
 <script>
     function saveSettings() {
         const settings = {};
+
+        // Values from settingDrawer
         persistedElements().forEach(element => {
             // A radio group stores one value, under the parent grouping
             if (element.type === "radio") {
@@ -375,6 +396,10 @@
 
             settings[element.id] = element[stateKey(element)];
         });
+
+        // Drawer width (unless default)
+        const drawerSize = root.style.getPropertyValue("--drawer-size");
+        if (drawerSize) settings.drawerSize = parseFloat(drawerSize);
 
         try {localStorage.setItem(STORAGE_KEY, JSON.stringify(settings))} catch {} // Storage may be unavailable
     }

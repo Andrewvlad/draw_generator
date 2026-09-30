@@ -286,11 +286,25 @@ main {
         aside {
             transform: translateX(-100%);
         }
+
+        #drawer-resizer {left: 0} /* Pinned to the window's left edge when the settings drawer is collapsed */
     }
 
     /* --------------- */
     /* Settings Drawer */
     /* --------------- */
+
+    /* Invisible resize edge for resizing the settings drawer */
+    #drawer-resizer {
+        position: absolute;
+        top: anchor(--settings-drawer top);
+        bottom: anchor(--settings-drawer bottom);
+        left: calc(anchor(--settings-drawer right) - 3px); /* 3px overshoot to the left */
+        z-index: 1; /* Above the preview header */
+        width: 8px;
+        cursor: col-resize;
+        touch-action: none; /* A touch drag resizes rather than scrolls */
+    }
 
     aside {
         padding: 12px 18px;
@@ -306,18 +320,6 @@ main {
             /* Count the widest row, even if it is currently hidden */
             details::details-content {content-visibility: visible}
             .section-body > div {display: flex !important} /* Overrides display: none */
-        }
-
-        /* Invisible resize edge for resizing the settings drawer */
-        #drawer-resizer {
-            position: absolute;
-            top: anchor(--settings-drawer top);
-            bottom: anchor(--settings-drawer bottom);
-            left: calc(anchor(--settings-drawer right) - 3px); /* 3px overshoot to the left */
-            z-index: 1; /* Above the preview header */
-            width: 8px;
-            cursor: col-resize;
-            touch-action: none; /* A touch drag resizes rather than scrolls */
         }
 
         details {
@@ -792,9 +794,9 @@ footer {
 
             /* Hide the border on the last section of settings (crowded with footer border) */
             details:last-child { border-bottom: none }
-
-            #drawer-resizer {display: none}
         }
+
+        #drawer-resizer {display: none}
 
         &:has(> aside[inert]) {
             grid-template-columns: 1fr; /* Override */
