@@ -387,6 +387,7 @@ main {
 
             > div.segmentedControl {
                 margin-left: auto;
+                anchor-name: --preview-segment; /* For the edit control's width */
             }
 
             border-bottom: 1px solid var(--border);
@@ -399,6 +400,9 @@ main {
                 position: absolute;
                 top: calc(100% + 1px); /* Below the header's border */
                 right: 0;
+                width: calc(anchor-size(--preview-segment width) + 18px); /* Preview segment width + header right pad */
+                max-width: calc(100% - 230px); /* Shrinks to fit a 5-cell dive (230px) */
+                min-width: max-content;
                 overflow: clip;
                 visibility: hidden;
                 transition: 0.25s;
