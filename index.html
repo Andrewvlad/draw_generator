@@ -318,7 +318,7 @@
     // Because the segments don't have uniform widths, the thumb needs to resize mid-animation
     // Resync after anything that resizes a segment, since nothing observes them
     function syncThumb(segmentedControl) {
-        // Rects over offsetLeft/offsetWidth since rounding missaligns the thumb
+        // Rects over offsetLeft/offsetWidth since rounding misaligns the thumb
         const selected = segmentedControl.querySelector("label:has(+ :checked)").getBoundingClientRect();
         const track = segmentedControl.getBoundingClientRect();
         segmentedControl.style.setProperty("--thumb-x", `${selected.left - track.left}px`);
@@ -337,7 +337,7 @@
 <script>
     const root = document.documentElement; // Sets the cursor pointer, even when the drawer closes (but still dragging)
     const drawerResizer = document.getElementById("drawer-resizer");
-    const SNAP_DISTANCE = 100; // Amount of overshoot passed min in px before drawer snaps closed
+    const SNAP_DISTANCE = 100; // Amount of overshoot past min in px before drawer snaps closed
 
     let drawerMinWidth, cursorToEdge;
 

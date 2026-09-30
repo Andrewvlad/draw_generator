@@ -364,7 +364,7 @@ main {
                     display: flex;
                     align-items: center;
                     justify-content: space-between;
-                    gap: 0; /* TODO: Segmented control's design with position absolute adds it's own gap */
+                    gap: 0; /* TODO: Segmented control's design with position absolute adds its own gap */
                 }
 
                 /* Only the chosen layout's count */
