@@ -24,6 +24,7 @@
 <main>
 <!--Settings drawer-->
     <aside id="settingsDrawer">
+        <div id="drawer-resizer"></div>
         <details id="setup-section" open>
             <summary>
                 Setup
@@ -292,10 +293,12 @@
     // Sync with initial --drawer-default value
     settingsToggle.setAttribute('aria-expanded', !settingsDrawer.inert);
 
-    settingsToggle.addEventListener('click', () => {
+    function toggleDrawer() {
         settingsDrawer.inert = !settingsDrawer.inert;
         settingsToggle.setAttribute('aria-expanded', !settingsDrawer.inert);
-    });
+    }
+
+    settingsToggle.addEventListener('click', toggleDrawer);
 
     // Segment controls
     const includeSegment = document.getElementById('includeSegment');
@@ -318,6 +321,45 @@
         getComputedStyle(segmentedControl, "::before").width; // Flush, so the seeded box is the transition's start point
         segmentedControl.dataset.ready = ""; // Enable the animation
         segmentedControl.addEventListener("change", () => syncThumb(segmentedControl));
+    });
+</script>
+<!--Drawer resizing-->
+<script>
+    const root = document.documentElement; // Sets the cursor pointer, even when the drawer closes (but still dragging)
+    const drawerResizer = document.getElementById("drawer-resizer");
+    const SNAP_DISTANCE = 100; // Amount of overshoot passed min in px before drawer snaps closed
+
+    let drawerMinWidth, cursorToEdge;
+
+    drawerResizer.addEventListener("pointerdown", event => {
+        if (event.button !== 0) return;
+
+        drawerResizer.setPointerCapture(event.pointerId); // Sets the cursor pointer, even when the drawer closes (but still dragging)
+        cursorToEdge = settingsDrawer.getBoundingClientRect().width - event.clientX; // Position of the cursor relative to the settings drawer
+
+        // Find the min width of the settings drawer by its widest row (including non-visible rows)
+        settingsDrawer.classList.add("measuring");
+        drawerMinWidth = settingsDrawer.getBoundingClientRect().width;
+        settingsDrawer.classList.remove("measuring");
+
+        root.style.setProperty("--drawer-min", `${drawerMinWidth}px`);
+        root.classList.add("resizing");
+    });
+
+    drawerResizer.addEventListener("pointermove", event => {
+        if (!drawerResizer.hasPointerCapture(event.pointerId)) return;
+
+        const width = event.clientX + cursorToEdge;
+        const open = width >= drawerMinWidth - SNAP_DISTANCE;
+        if (open === settingsDrawer.inert) toggleDrawer(); // Toggle the drawer if the cursor overshoots the SNAP_DISTANCE
+        root.style.setProperty("--drawer-size", `${open ? width : drawerMinWidth}px`); // Floors the width at drawerMinWidth
+    });
+
+    // Keeps the width the drawer reached
+    drawerResizer.addEventListener("lostpointercapture", () => {
+        if (!settingsDrawer.inert) root.style.setProperty("--drawer-size", `${settingsDrawer.getBoundingClientRect().width}px`);
+        settingsDrawer.offsetHeight; // Flush while transitions are still off, so the swap doesn't animate
+        root.classList.remove("resizing");
     });
 </script>
 <!--Settings persistence-->

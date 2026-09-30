@@ -17,6 +17,7 @@
     --warning: #eab308;
     --radius: 8px;
     --drawer-size: 320px;
+    --drawer-min: 0px; /* Widest row (set on drag start, and includes non-visible settings) */
     --drawer-default: open; /* Read by at boot */
 
     /* Fonts */
@@ -60,6 +61,9 @@ body > * {
 /* Hide dive images when showImages is unchecked */
 body:not(:has(#showImages:checked)) #diveImages * {display: none}
 body:has(#showImages:checked) #dives {display: none}
+
+/* Resize drawer cursor takes priority (for when drawer collapses, but the user still is dragging) */
+.resizing * {cursor: col-resize !important}
 
 /* --------------- */
 /* Utility Classes */
@@ -270,12 +274,14 @@ header {
 
 main {
     display: grid;
-    grid-template-columns: var(--drawer-size) 1fr;
+    grid-template-columns: minmax(var(--drawer-min), var(--drawer-size)) 1fr; /* minmax() prevents drawer from overrunning the main content */
     grid-template-rows: minmax(0, 1fr); /* Without this the implicit row grows to fit content. Needed for scrolling */
     transition: grid-template-columns 0.25s;
 
+    .resizing & {transition: none} /* Disable animation when resizing */
+
     &:has(> aside[inert]) {
-        grid-template-columns: 0 1fr;
+        grid-template-columns: minmax(0, 0) 1fr; /* minmax(0, 0) required for animation */
 
         aside {
             transform: translateX(-100%);
@@ -290,6 +296,29 @@ main {
         padding: 12px 18px;
         border-right: 1px solid var(--border);
         overflow: hidden auto; /* Clip content while the track collapses */
+        anchor-name: --settings-drawer; /* For the resize edge */
+
+        /* Used with getBoundingClientRect() when starting a resize of the settings drawer to set --drawer-min  */
+        &.measuring {
+            width: min-content;
+            overflow: hidden; /* Chrome counts a scrollbar in min-content and Firefox doesn't */
+
+            /* Count the widest row, even if it is currently hidden */
+            details::details-content {content-visibility: visible}
+            .section-body > div {display: flex !important} /* Overrides display: none */
+        }
+
+        /* Invisible resize edge for resizing the settings drawer */
+        #drawer-resizer {
+            position: absolute;
+            top: anchor(--settings-drawer top);
+            bottom: anchor(--settings-drawer bottom);
+            left: calc(anchor(--settings-drawer right) - 3px); /* 3px overshoot to the left */
+            z-index: 1; /* Above the preview header */
+            width: 8px;
+            cursor: col-resize;
+            touch-action: none; /* A touch drag resizes rather than scrolls */
+        }
 
         details {
             border-bottom: 1px solid var(--border);
@@ -333,6 +362,7 @@ main {
                     display: flex;
                     align-items: center;
                     justify-content: space-between;
+                    gap: 0; /* TODO: Segmented control's design with position absolute adds it's own gap */
                 }
 
                 /* Only the chosen layout's count */
@@ -343,6 +373,7 @@ main {
             label {
                 color: var(--muted);
                 font-size: 13px;
+                white-space: nowrap; /* Rows never wrap */
             }
         }
     }
@@ -761,6 +792,8 @@ footer {
 
             /* Hide the border on the last section of settings (crowded with footer border) */
             details:last-child { border-bottom: none }
+
+            #drawer-resizer {display: none}
         }
 
         &:has(> aside[inert]) {
