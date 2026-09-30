@@ -15,6 +15,8 @@ Hosted [here](https://andrewvlad.github.io/draw_generator/) on GitHub.
 ## Features
 - Instant generation
 - Perfectly random
+- Creating/editing dives
+  - Lock edits in place (switches to simpler random fill)
 - Copy to clipboard
 - Export as PDF
 - Settings auto-saved

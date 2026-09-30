@@ -14,6 +14,7 @@
     --accent: #1e90ff;
     --accent-soft: #e8f2ff;
     --bad: #e5484d;
+    --warning: #eab308;
     --radius: 8px;
     --drawer-size: 320px;
     --drawer-default: open; /* Read by at boot */
@@ -33,7 +34,7 @@
     user-select: none;
     -webkit-tap-highlight-color: transparent; /* Kill the blue tap flash on touch */
 
-    font-size: 15px;
+    font-size: 15px; /* Note: Skips pseudo-elements (e.g., ::before) */
     line-height: 1.5;
     font-family: var(--sans), serif;
 }
@@ -366,6 +367,24 @@ main {
                 font-weight: 500;
             }
 
+            /* Lock badge (only visible when edit mode is off)*/
+            #lock-badge {
+                visibility: hidden;
+                opacity: 0;
+                color: var(--accent);
+                transition: 0.125s;
+
+                section:has(#lock-toggle[aria-pressed="true"]) #editToggle[aria-pressed="false"] ~ & {
+                    visibility: visible;
+                    opacity: 1;
+                }
+
+                svg {
+                    width: 18px;
+                    height: 18px;
+                }
+            }
+
             > div.segmentedControl {
                 margin-left: auto;
             }
@@ -448,12 +467,28 @@ main {
                         height: 16px;
                     }
                 }
+
+                #lock-toggle {
+                    position: relative; /* Anchor for the dot */
+
+                    /* Yellow dot when edits to the draw are not locked */
+                    section:has(.edited) &::after {
+                        content: "";
+                        position: absolute;
+                        top: 2px;
+                        right: 2px;
+                        width: 6px;
+                        height: 6px;
+                        border-radius: 50%;
+                        background: var(--warning);
+                    }
+                }
             }
         }
 
         /* Styles for both previews */
         #previewHeader ~ * {
-            /* TODO: Consider a grey background */
+            /* TODO: Consider a gray background */
             padding: 0.5rem 1rem;
 
             overflow-y: auto;
@@ -542,10 +577,15 @@ main {
                 &.invalid {color: var(--bad)}
             }
 
+            /* When lock enabled, unlocked cells' text is muted (red supersedes) */
+            body:has(#lock-toggle[aria-pressed="true"]) & .cell:not(.locked, .invalid) {color: var(--muted)}
+
             /* Only paint border during edit mode */
             body:has(#editToggle[aria-pressed="true"]) & {
-                .cell {border-color: var(--track)}
-                .cell.invalid {border-color: var(--bad)}
+                .cell:not(.locked) {border-color: var(--track)}
+                .cell.locked {cursor: default} /* No cursor for locked cells */
+                .cell.edited {border-color: var(--warning)}
+                .cell.invalid:not(.locked) {border-color: var(--bad)}
             }
         }
 
@@ -653,26 +693,31 @@ footer {
 /* Toast */
 /* ----- */
 
-/* The toast notifies when copying to clipboard */
-
+/* The toast notifies when copying to clipboard and lock actions */
 .toast {
-    visibility: hidden;
-    background-color: #222222;
-    color: #ffffff;
-    text-align: center;
-    border-radius: 21px; /* Rounded corners */
-    padding: 12px 18px;
     position: fixed;
     bottom: 30px;
     left: 50%;
     transform: translateX(-50%);
-    opacity: 1; /* Transition from 1 opacity */
-    transition: opacity 1s ease-out 0.25s; /* Transition for 1s after 0.25s, quickly at first */
+    padding: 12px 18px;
+    background-color: #222222;
+    border-radius: 21px; /* Rounded corners */
+    color: #ffffff;
+    text-align: center;
+    opacity: 0; /* Use opacity over visibility: hidden, as screen readers permanently ignore changes to hidden statuses*/
+    pointer-events: none; /* Clicks pass through the toast */
 
-    &.show {
-        opacity: 0; /* Transition to 0 opacity */
-        visibility: visible;
+    /* Solid for 0.25s, then fades out over 1s */
+    &.show {animation: toast-fade 1.25s}
+}
+
+@keyframes toast-fade {
+    0%, 20% {
+        opacity: 1;
+        animation-timing-function: ease-out;
     }
+
+    100% {opacity: 0}
 }
 
 /* Used with .offsetHeight to clear a currently running animation */

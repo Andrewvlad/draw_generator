@@ -12,13 +12,17 @@ const randomItem = (arr) => arr.splice(Math.floor(Math.random() * arr.length), 1
 
 const pointValue = (point) => Number.isInteger(point) ? 2 : 1;
 
+const isFilled = (point) => point !== '';
+
+const divePoints = (dive) => dive.filter(isFilled).reduce((sum, point) => sum + pointValue(point), 0);
+
 const transitionKey = (from, to) => `${from}>${to}`;
 
 // The last formation loops back to the start, so a dive's transitions wrap (using remainder to loop)
 const diveTransitions = (dive) => dive.map((point, i) => transitionKey(point, dive[(i + 1) % dive.length]));
 
 /** HTML display **/
-const listDives = (dives, slots = 5) => {
+const listDives = (dives, slots = 5, locked) => {
     if (typeof dives === 'string') return dives; // Exit early if it's an error string
 
     // Real text so manual copying picks up trailing comma and single space (hidden if neighbor empty)
@@ -27,8 +31,8 @@ const listDives = (dives, slots = 5) => {
     // Create empty slots for user to fill-in
     const paddedDive = (dive) => Array.from({length: slots}, (_, i) => dive[i] ?? '');
 
-    const slotHTML = (point) => `<span class="slot"><span class="cell">${point}</span>${SEPARATOR}</span>`;
-    const rowHTML = (dive) => `<li>${paddedDive(dive).map(slotHTML).join('')}</li>`;
+    const slotHTML = (point, isLocked) => `<span class="slot"><span class="cell${isLocked ? ' locked' : ''}">${point}</span>${SEPARATOR}</span>`;
+    const rowHTML = (dive, i) => `<li>${paddedDive(dive).map((point, j) => slotHTML(point, locked && isFilled(locked[i][j]))).join('')}</li>`;
 
     return `<ol>${dives.map(rowHTML).join('')}</ol>`;
 };
@@ -186,4 +190,110 @@ const main = ({
     }
 
     return dives;
+};
+
+// Fill the free slots around the locked slots
+// TODO: Review AI-generated fillAroundLocks()
+const fillAroundLocks = ({
+    numDives = 10,
+    minPoints = 3,
+    uniqueExits = false,
+    uniqueTransitions = false,
+    useRandoms = true,
+    useBlocks = true,
+    locked,
+}) => {
+    // Fewest formations a dive can use to reach minPoints (used for uniqueTransitions error)
+    const minFormations = useBlocks ? Math.ceil(minPoints / 2) : minPoints;
+    const MAX_ATTEMPTS = 100; // Before succumbing to a rule break
+    const fullPool = [
+        ...useRandoms ? randoms : [],
+        ...useBlocks ? blocks : [],
+    ];
+
+    if (uniqueExits && fullPool.length < numDives) return 'Number of dives exceeds the amount of unique exits';
+    if (uniqueTransitions && numDives * minFormations > fullPool.length * (fullPool.length - 1))
+        return 'Number of dives exceeds the amount of unique transitions';
+
+    // Transitions already decided: touching neighbors, or the whole loop once the dive is complete
+    const settledTransitions = (dive, complete) => complete
+        ? diveTransitions(dive.filter(isFilled))
+        : dive.slice(1).flatMap((point, i) => isFilled(dive[i]) && isFilled(point) ? [transitionKey(dive[i], point)] : []);
+
+    const lockedPoints = locked.flat();
+
+    // What the locks decide counts as used from the start, so earlier dives avoid it too
+    const lockedExits = [];
+    const lockedTransitions = [];
+    locked.forEach(dive => {
+        const complete = divePoints(dive) >= minPoints;
+        if (complete || isFilled(dive[0])) lockedExits.push(dive.find(isFilled));
+        lockedTransitions.push(...settledTransitions(dive, complete));
+    });
+
+    // One pass over the draw, which gives up at a dead end unless a slot may break a rule instead
+    const fillOnce = (allowBrokenRule) => {
+        const dives = [];
+        const exits = new Set(lockedExits);
+        const transitions = new Set(lockedTransitions);
+        let pool = fullPool.filter(point => !lockedPoints.includes(point)); // Locked values count as already dealt
+
+        for (const lockedDive of locked) {
+            const dive = [...lockedDive];
+            let curPoints = divePoints(dive); // Locked points count first
+
+            // Free slots fill left to right only while the dive is short, so the rest stay empty
+            for (let slot = 0; slot < dive.length && curPoints < minPoints; slot++) {
+                if (isFilled(dive[slot])) continue;
+
+                // Fill empty pool
+                if (!pool.length) pool = [...fullPool];
+
+                // Points before the last locked cell stay under minPoints, so that cell stays within the point cap
+                const lastLockedSlot = dive.findLastIndex(isFilled);
+                const pointLimit = lastLockedSlot > slot ? minPoints - divePoints(dive.slice(0, lastLockedSlot)) : Infinity;
+
+                const settled = settledTransitions(dive, false);
+                const newTransitions = (point) => settledTransitions(dive.with(slot, point), curPoints + pointValue(point) >= minPoints)
+                    .filter(transition => !settled.includes(transition));
+
+                const fits = (point) => !dive.includes(point) // If point has already been used in this dive
+                    && pointValue(point) < pointLimit // If it would push the last locked cell over the point cap
+                    && !(uniqueExits && !slot && exits.has(point)) // If exit has already been used
+                    && !(uniqueTransitions && newTransitions(point).some(transition => transitions.has(transition))); // If a transition it decides has already been used
+
+                // Deal one that fits, else repeat a dealt one that fits
+                let choices = pool.filter(fits);
+                if (!choices.length) choices = fullPool.filter(fits);
+                if (!choices.length) {
+                    if (!allowBrokenRule) return; // Dead end
+                    choices = fullPool.filter(point => !dive.includes(point));
+                }
+
+                const [randomPoint] = randomItem(choices);
+                pool = pool.filter(point => point !== randomPoint);
+                dive[slot] = randomPoint;
+                curPoints += pointValue(randomPoint);
+            }
+
+            const formations = dive.filter(isFilled);
+
+            // Add exit
+            exits.add(formations[0]);
+
+            // Add transitions
+            diveTransitions(formations).forEach(transition => transitions.add(transition));
+
+            dives.push(dive);
+        }
+
+        return dives;
+    };
+
+    // Retry until MAX_ATTEMPTS before accepting rule breaks
+    for (let attempt = 1; attempt < MAX_ATTEMPTS; attempt++) {
+        const dives = fillOnce(false);
+        if (dives) return dives;
+    }
+    return fillOnce(true);
 };

@@ -78,12 +78,12 @@
 
                 <div>
                     <label for="uniqueExits">Unique Exits</label>
-                    <input type="checkbox" id="uniqueExits" class="toggle" role="switch" onchange="checked && addToPage()">
+                    <input type="checkbox" id="uniqueExits" class="toggle" role="switch" onchange="checked ? addToPage() : recheckDraw()">
                 </div>
 
                 <div>
                     <label for="uniqueTransitions" title="Transitions are basic-unique (similar formations are still treated as unique)">Unique Transitions*</label>
-                    <input type="checkbox" id="uniqueTransitions" class="toggle" role="switch" onchange="checked && addToPage()">
+                    <input type="checkbox" id="uniqueTransitions" class="toggle" role="switch" onchange="checked ? addToPage() : recheckDraw()">
                 </div>
 
             </div>
@@ -206,6 +206,10 @@
             <button type="button" id="editToggle" class="icon" title="Edit dives" aria-label="Edit dives" aria-pressed="false">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
             </button>
+            <!--Lock reminder badge, since the Lock toggle hides with the edit toggle-->
+            <span id="lock-badge" role="img" title="Lock enabled" aria-label="Lock enabled">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="12" rx="2.5"/><path d="M7 10V7a5 5 0 0 1 10 0v3"/></svg>
+            </span>
             <div id="previewSegment" class="segmentedControl" role="radiogroup" aria-label="Preview">
                 <label for="preview-text">Text</label>
                 <input type="radio" name="preview" id="preview-text" value="text" checked>
@@ -239,7 +243,7 @@
     </button>
 </footer>
 
-<div id="copyClipboardToast" class="toast">Copied to clipboard</div>
+<div id="toast" class="toast" role="status"></div>
 
 
 <!--Scripts-->
@@ -299,6 +303,7 @@
     const showImages = document.getElementById('showImages');
 
     // Because the segments don't have uniform widths, the thumb needs to resize mid-animation
+    // Resync after anything that resizes a segment, since nothing observes them
     function syncThumb(segmentedControl) {
         // Rects over offsetLeft/offsetWidth since rounding missaligns the thumb
         const selected = segmentedControl.querySelector("label:has(+ :checked)").getBoundingClientRect();
@@ -360,18 +365,54 @@
 <script>
     let generatedDives;
 
+    // Check what cells are locked (if any)
+    function lockedCells() {
+        const rows = [...diveList.querySelectorAll("li")].map(row => row.querySelectorAll(".cell"));
+
+        return Array.from({length: numDives.value}, (_, i) => Array.from({length: minPoints.value}, (_, j) => {
+            const cell = rows[i]?.[j];
+            return cell?.classList.contains("locked") ? parsePoint(cell.textContent) : "";
+        }));
+    }
+
+    // Check if draw cannot change (due to locking)
+    function drawUnchanged(locked) {
+        const cells = [...diveList.querySelectorAll(".cell")];
+
+        return diveList.querySelectorAll("li").length === numDives.valueAsNumber
+            && cells.length === numDives.value * minPoints.value
+            && cells.every(cell => cell.classList.contains("locked") || !cell.textContent)
+            && locked.every(dive => divePoints(dive) >= minPoints.value);
+    }
+
+    // Add dives to the page
     function addToPage() {
-        if (numDives.checkValidity() && minPoints.checkValidity()) {
-            // Generate the draw
+        if (!numDives.checkValidity() || !minPoints.checkValidity()) return;
+
+        // Generate the draw around any locked cells
+        if (lockToggle.ariaPressed === "true") {
+            const locked = lockedCells();
+            const draw = drawUnchanged(locked) ? "Nothing can change (all values locked)" : fillAroundLocks({...drawSettings(), locked});
+
+            // Show error as toast, instead of clearing the draw
+            if (typeof draw === "string") {
+                syncEdits();
+                showToast(draw);
+                return;
+            }
+
+            diveList.innerHTML = listDives(draw, minPoints.value, locked);
+            syncEdits();
+        } else {
             generatedDives = main(drawSettings());
-
-            // Add dives to the page
             diveList.innerHTML = listDives(generatedDives, minPoints.value);
-            diveImages.innerHTML = divesAsImages(generatedDives);
-
-            setEditable();
-            syncColumns();
         }
+
+        // Add dives to the page
+        diveImages.innerHTML = divesAsImages(generatedDives);
+
+        setEditable();
+        syncColumns();
     }
 </script>
 <!--Dive editing-->
@@ -394,20 +435,52 @@
 
     function setEditable() {
         const editing = editToggle.ariaPressed === "true";
-        diveList.querySelectorAll(".cell").forEach(cell => cell.contentEditable = editing ? "plaintext-only" : "false");
+        // Locked cells stay read-only
+        diveList.querySelectorAll(".cell").forEach(cell => cell.contentEditable = editing && !cell.classList.contains("locked") ? "plaintext-only" : "false");
     }
 
     // Lock toggle
-    // TODO: Implement locking
     const lockToggle = document.getElementById("lock-toggle");
 
     lockToggle.addEventListener("click", () => {
-        lockToggle.ariaPressed = lockToggle.ariaPressed !== "true";
+        const editedCells = diveList.querySelectorAll(".edited");
+
+        // Values modified/added while lock enabled, are re-locked when lock is re-selected
+        if (editedCells.length) {
+            editedCells.forEach(cell => cell.classList.replace("edited", "locked"));
+            setEditable();
+            showToast("Changes locked");
+            return;
+        }
+
+        // Otherwise, toggling the lock will lock/release all filled cells
+        const locking = lockToggle.ariaPressed !== "true";
+        const cells = [...diveList.querySelectorAll(".cell")];
+
+        if (locking && cells.every(cell => !cell.textContent)) {
+            showToast("No values to lock");
+            return;
+        }
+
+        lockToggle.ariaPressed = locking;
+
+        cells.forEach(cell => cell.classList.toggle("locked", locking && cell.textContent !== ""));
+        setEditable();
     });
 
-    // Clear all the cells
+    // Clear the cells (that are not locked)
     function clearDives() {
-        diveList.querySelectorAll(".cell").forEach(cell => cell.textContent = "");
+        const freeCells = [...diveList.querySelectorAll(".cell:not(.locked)")];
+
+        if (diveList.querySelector(".locked") && freeCells.every(cell => !cell.textContent)) {
+            showToast("Nothing to clear (all values are locked)");
+            return;
+        }
+
+        freeCells.forEach(cell => {
+            cell.textContent = "";
+            cell.classList.remove("edited");
+        });
         syncEdits();
 
         // Rebuild here, since the focusout rebuild only follows typing
@@ -426,6 +499,9 @@
             // User input remains at the end of the input, instead of jumping to start
             getSelection().collapse(cell, cell.childNodes.length);
         }
+
+        // Highlight modified cells (when lock enabled)
+        cell.classList.toggle("edited", lockToggle.ariaPressed === "true" && cell.textContent !== "");
 
         divesEdited = true;
         syncEdits();
@@ -451,6 +527,11 @@
         });
     }
 
+    // Re-check the draw after a rule has been switched off
+    function recheckDraw() {
+        if (diveList.querySelector("li")) syncEdits();
+    }
+
     // Rebuild diveImages after edits are complete. Focusout so that [CTRL+P] is also caught
     diveList.addEventListener("focusout", () => {
         if (divesEdited) {
@@ -461,6 +542,7 @@
 
     /** Keyboard navigation **/
     // TODO: Add arrow-key support
+    // TODO: Add shift-enter support
 
     // Select the contents of the cell for editing on arrival
     const selectCell = (cell) => getSelection().selectAllChildren(cell);
@@ -475,7 +557,7 @@
         event.preventDefault(); // Stops newline
 
         // Navigate to next line after reaching the end of the dive (or from very bottom to top)
-        const cells = [...diveList.querySelectorAll(".cell")];
+        const cells = [...diveList.querySelectorAll(".cell:not(.locked)")]; // Locked cells are not editable
         selectCell(cells[(cells.indexOf(event.target) + 1) % cells.length]);
     });
 </script>
@@ -545,8 +627,8 @@
         const diveCount = diveImages.childElementCount;
         if (!diveCount) return; // A failed draw prints nothing, so the pick is kept
 
-        // Auto compares as NaN, so it never greys out
-        [...columnsPerPage.options].forEach(option => option.disabled = option.value > diveCount);
+        // Auto compares as NaN, so it never grays out
+        [...columnsPerPage.options].forEach(option => option.disabled = option.value > diveCount); // Cannot use hidden (ignored by Safari for options)
         if (columnsPerPage.selectedOptions[0].disabled) columnsPerPage.value = "auto";
         setColumns(columnsPerPage.value);
     }
@@ -564,29 +646,30 @@
         pageSizeRule.textContent = size && `@page { size: ${size} }`;
     }
 </script>
-<!--Copy to clipboard & toast notification-->
+<!--Toast notification-->
 <script>
-    const toast = document.getElementById("copyClipboardToast");
-    let toastTimeout;
+    const toast = document.getElementById("toast");
 
-    // Reset animation by removing and re-adding the class
-    function refreshToast() {
+    function showToast(message) {
+        toast.textContent = message;
+
+        // Reset animation by removing and re-adding the class
         toast.classList.remove("show");
-        toast.classList.add('noTransition'); // Disable transitions
         toast.offsetHeight; // Trigger a reflow, flushing the CSS changes
-        toast.classList.remove('noTransition'); // Re-enable transitions
         toast.classList.add("show");
-
-        clearTimeout(toastTimeout); // Clear existing timeout, if any
     }
 
+    // Emptied once faded, so screen readers announce a repeat as new
+    toast.addEventListener("animationend", () => toast.textContent = "");
+</script>
+<!--Copy to clipboard-->
+<script>
     function copyToClipboard() {
         // Built from the draw rather than the preview (edits carry, but not typos)
         navigator.clipboard.writeText(divesAsText(generatedDives));
 
         // Display a toast notification
-        refreshToast();
-        toastTimeout = setTimeout(() => toast.classList.remove("show"), 1250);
+        showToast("Copied to clipboard");
     }
 </script>
 <!--Initial render-->
