@@ -607,25 +607,33 @@
         }
     });
 
-    /** Keyboard navigation **/
+    /** Keyboard navigation in edit mode **/
     // TODO: Add arrow-key support
     // TODO: Add shift-enter support
 
-    // Select the contents of the cell for editing on arrival
-    const selectCell = (cell) => getSelection().selectAllChildren(cell);
+    // Select the contents of the cell for editing on focus ([Tab], [Shift] + [Tab], [Enter])
+    diveList.addEventListener("focusin", event => {
+        if (event.target === diveList) return; // Prevent ugly "select all" on dive-flows when tab navigating
 
-    // Focus ([Tab], [Shift+Tab])
-    diveList.addEventListener("focusin", event => selectCell(event.target));
+        event.target.scrollIntoView({block: "nearest"}); // Scroll just enough (instead of the default centering jump)
+        getSelection().selectAllChildren(event.target); // Select cell's content
+    });
 
-    // [Enter]
+    // Keybinds ([Tab], [Shift] + [Tab], [Enter])
     diveList.addEventListener("keydown", event => {
-        if (event.key !== "Enter") return;
-
-        event.preventDefault(); // Stops newline
+        if (event.target === diveList) return;
+        if (event.key !== "Enter" && event.key !== "Tab") return;
 
         // Navigate to next line after reaching the end of the dive (or from very bottom to top)
-        const cells = [...diveList.querySelectorAll(".cell:not(.locked)")]; // Locked cells are not editable
-        selectCell(cells[(cells.indexOf(event.target) + 1) % cells.length]);
+        const cells = [...diveList.querySelectorAll(".cell:not(.locked)")]; // Skip locked cells
+        const index = cells.indexOf(event.target);
+        const nextCell = event.key === "Enter" ? cells[(index + 1) % cells.length] : cells[event.shiftKey ? index - 1 : index + 1];
+
+        if (!nextCell) return; // [Tab] returns to normal function at end of list
+
+        event.preventDefault(); // Stops newline and the native [Tab] move
+
+        nextCell.focus({preventScroll: true}); // Focus the next cell (and use our focus scroll override)
     });
 </script>
 <!--Image printing-->

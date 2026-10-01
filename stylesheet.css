@@ -606,6 +606,7 @@ main {
                 overflow: hidden;
 
                 &:focus-visible {
+                    scroll-margin: 1px; /* Needed to fit entire outline */
                     outline: 2px solid var(--accent);
                     outline-offset: -1px; /* Outline covers the dashed border */
                 }
