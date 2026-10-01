@@ -59,7 +59,11 @@ body > * {
 }
 
 /* Hide dive images when showImages is unchecked */
-body:not(:has(#showImages:checked)) #diveImages * {display: none}
+body:not(:has(#showImages:checked)) #diveImages {
+    padding: 0; /* Otherwise the padding remains on the page below the text preview */
+
+    * {display: none}
+}
 body:has(#showImages:checked) #dives {display: none}
 
 /* Resize drawer cursor takes priority (for when drawer collapses, but the user still is dragging) */
@@ -793,11 +797,25 @@ footer {
             /* Hide the padding on the bottom */
             padding-bottom: 0;
 
+            @media (prefers-reduced-motion: reduce) {transition: none}
+
             /* Hide the border on the last section of settings (crowded with footer border) */
             details:last-child { border-bottom: none }
         }
 
         #drawer-resizer {display: none}
+
+        /* Pad the preview by the open drawer's height, so nothing is hidden underneath the drawer */
+        section #previewHeader ~ * {
+            transition: padding-bottom 0.35s; /* Slightly slower than the drawer's transition */
+
+            main:not(:has(> aside[inert])) & {
+                padding-bottom: calc(0.5rem + var(--drawer-height)); /* --drawer-height from a ResizeObserver */
+                scroll-padding-bottom: var(--drawer-height); /* A focused cell scrolls into view above the drawer */
+            }
+
+            @media (prefers-reduced-motion: reduce) {transition: none}
+        }
 
         &:has(> aside[inert]) {
             grid-template-columns: 1fr; /* Override */

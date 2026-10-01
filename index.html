@@ -381,6 +381,13 @@
         saveSettings();
     });
 </script>
+<!--Mobile drawer height-->
+<script>
+    // Pad the preview by the open drawer's height, so nothing is hidden underneath the drawer
+    new ResizeObserver(([entry]) => {
+        root.style.setProperty("--drawer-height", `${entry.borderBoxSize[0].blockSize}px`);
+    }).observe(settingsDrawer, {box: "border-box"});
+</script>
 <!--Settings persistence (localStorage)-->
 <script>
     function saveSettings() {
