@@ -17,8 +17,9 @@
     --warning: #eab308;
     --radius: 8px;
     --drawer-size: 320px;
+    --drawer-mobile-size: 75%; /* Max height (drawer shrinks to fit content) */
     --drawer-min: 0px; /* Widest row (set on drag start, and includes non-visible settings) */
-    --drawer-default: open; /* Read by at boot */
+    --drawer-default: open; /* Read at boot (used to start drawer collapsed on mobile) */
 
     /* Fonts */
     --sans: -apple-system, system-ui, "Segoe UI", Roboto, Arial, sans-serif;
@@ -309,6 +310,8 @@ main {
         cursor: col-resize;
         touch-action: none; /* A touch drag resizes rather than scrolls */
     }
+
+    #drawer-grabber {display: none} /* Mobile only */
 
     aside {
         padding: 12px 18px;
@@ -775,6 +778,8 @@ footer {
     /* The drawer starts closed */
     :root {--drawer-default: collapsed}
 
+    .resizing * {cursor: row-resize !important}
+
     /* Drawer slides up from the bottom, overlaying the preview */
     main {
         grid-template-columns: 1fr; /* Drawer is out of flow, section takes the width (needed for scroll) */
@@ -786,7 +791,7 @@ footer {
             position: absolute;
             inset: auto 0 0; /* Pinned to the bottom, full width */
             z-index: 1; /* Over the edit tools */
-            max-height: 75%;
+            max-height: clamp(25%, var(--drawer-mobile-size), 75%);
             background: var(--background);
             border-right: none; /* Offscreen so no-op, but it is proper */
             border-top: 1px solid var(--border);
@@ -801,6 +806,27 @@ footer {
 
             /* Hide the border on the last section of settings (crowded with footer border) */
             details:last-child { border-bottom: none }
+
+            /* Grabber at the top of the settings drawer */
+            #drawer-grabber {
+                position: absolute;
+                inset: 0 0 auto;
+                display: block;
+                height: 24px;
+                cursor: row-resize;
+                touch-action: none; /* Blocks scrolling */
+
+                /* Grab pill */
+                &::before {
+                    content: "";
+                    display: block;
+                    width: 36px;
+                    height: 5px;
+                    margin: 15.5px auto 0;
+                    border-radius: 2.5px;
+                    background: var(--track);
+                }
+            }
         }
 
         #drawer-resizer {display: none}

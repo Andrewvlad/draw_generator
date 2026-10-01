@@ -24,6 +24,7 @@
 <main>
 <!--Settings drawer-->
     <aside id="settingsDrawer">
+        <div id="drawer-grabber"></div> <!--Resize handle on mobile devices, inside the settingsDrawer so it scrolls with the settings-->
         <details id="setup-section" open>
             <summary>
                 Setup
@@ -195,6 +196,11 @@
                 mainElement.offsetHeight; // Trigger a reflow
                 mainElement.classList.remove("noTransition");
             }
+
+            // Apply localStorage mobile drawer max height
+            if (typeof stored.drawerMobileSize === "number") { // Since it can be negative or 0, before it gets clamped
+                document.documentElement.style.setProperty("--drawer-mobile-size", `${stored.drawerMobileSize}px`);
+            }
         }
 
         restoreSettings();
@@ -337,12 +343,13 @@
 <script>
     const root = document.documentElement; // Sets the cursor pointer, even when the drawer closes (but still dragging)
     const drawerResizer = document.getElementById("drawer-resizer");
+    const drawerGrabber = document.getElementById("drawer-grabber");
     const SNAP_DISTANCE = 100; // Amount of overshoot past min in px before drawer snaps closed
 
     let drawerMinWidth, cursorToEdge;
 
     drawerResizer.addEventListener("pointerdown", event => {
-        if (event.button !== 0) return;
+        if (event.button !== 0) return; // Cancels context clicks (only accepts left clicks, aka index 0)
 
         drawerResizer.setPointerCapture(event.pointerId); // Sets the cursor pointer, even when the drawer closes (but still dragging)
         cursorToEdge = settingsDrawer.getBoundingClientRect().right - event.clientX; // Position of the cursor relative to the settings drawer
@@ -356,6 +363,7 @@
         root.classList.add("resizing");
     });
 
+    // Resize on drag
     drawerResizer.addEventListener("pointermove", event => {
         if (!drawerResizer.hasPointerCapture(event.pointerId)) return;
 
@@ -374,10 +382,34 @@
         saveSettings();
     });
 
-    // Double-clicking opens and resets a drawer to it's default width
+    // Double-clicking opens and resets a drawer to its default width
     drawerResizer.addEventListener("dblclick", () => {
         root.style.removeProperty("--drawer-size");
         if (settingsDrawer.inert) toggleDrawer();
+        saveSettings();
+    });
+
+    /** Mobile Drawer **/
+
+    drawerGrabber.addEventListener("pointerdown", event => {
+        if (event.button !== 0) return; // Cancels context clicks (only accepts left clicks, aka index 0)
+
+        drawerGrabber.setPointerCapture(event.pointerId);
+        cursorToEdge = settingsDrawer.getBoundingClientRect().top - event.clientY; // Position of the cursor relative to the settings drawer
+        root.classList.add("resizing");
+    });
+
+    // Resize on drag
+    drawerGrabber.addEventListener("pointermove", event => {
+        if (!drawerGrabber.hasPointerCapture(event.pointerId)) return;
+
+        // We let the CSS do the max-height clamping (25% - 75%)
+        root.style.setProperty("--drawer-mobile-size", `${settingsDrawer.getBoundingClientRect().bottom - (event.clientY + cursorToEdge)}px`);
+    });
+
+    // On release, save the new height and restore cursor
+    drawerGrabber.addEventListener("lostpointercapture", () => {
+        root.classList.remove("resizing");
         saveSettings();
     });
 </script>
@@ -407,6 +439,10 @@
         // Drawer width (unless default)
         const drawerSize = root.style.getPropertyValue("--drawer-size");
         if (drawerSize) settings.drawerSize = parseFloat(drawerSize);
+
+        // Mobile drawer max height (unless default)
+        const drawerMobileSize = root.style.getPropertyValue("--drawer-mobile-size");
+        if (drawerMobileSize) settings.drawerMobileSize = parseFloat(drawerMobileSize);
 
         try {localStorage.setItem(STORAGE_KEY, JSON.stringify(settings))} catch {} // Storage may be unavailable
     }
