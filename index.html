@@ -146,7 +146,12 @@
             </div>
         </details>
     </aside>
-    <div id="drawer-resizer"></div> <!--Outside the settingsDrawer, so it can be grabbed even when collapsed-->
+    <!--Outside the settingsDrawer, so it can be grabbed even when collapsed-->
+    <div id="drawer-resizer" title="Drag to resize (Double-click to reset)">
+        <span id="resizer-tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></span>
+        <span id="resizer-line"></span> <!--Paints over the tab, but under the grip-->
+        <span id="resizer-grip"><svg viewBox="0 0 4 12" fill="none" stroke="currentColor"><path d="M.5 0v12M3.5 0v12"/></svg></span>
+    </div>
     <!--Restore saved settings before first paint so sections and segmented control thumb don't flash-->
     <script>
         const STORAGE_KEY = "drawGenerator";
@@ -352,7 +357,11 @@
         if (event.button !== 0) return; // Cancels context clicks (only accepts left clicks, aka index 0)
 
         drawerResizer.setPointerCapture(event.pointerId); // Sets the cursor pointer, even when the drawer closes (but still dragging)
-        cursorToEdge = settingsDrawer.getBoundingClientRect().right - event.clientX; // Position of the cursor relative to the settings drawer
+
+        // Position of the cursor relative to the settings drawer at drag start
+        cursorToEdge = settingsDrawer.inert
+            ? 0 // 0 when starting collapsed, so that the edge is perfectly inline under the cursor
+            : settingsDrawer.getBoundingClientRect().right - event.clientX;
 
         // Find the min width of the settings drawer by its widest row (including non-visible rows)
         settingsDrawer.classList.add("measuring");

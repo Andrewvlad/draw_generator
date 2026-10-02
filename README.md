@@ -33,13 +33,15 @@ Hosted [here](https://andrewvlad.github.io/draw_generator/) on GitHub.
 ## UX Flex
 - Mobile settings drawer comes from below instead
 - Settings drawer is resizable
-  - Drag to resize, or collapse
+  - Drag edge to resize, or collapse
   - Drag from the left edge to reopen a collapsed drawer
   - Double-tap to reset to the default width
+  - Hovering the edge shows a grip and a hint (or a pull tab when collapsed)
 - Text preview is formatted such that you can select + copy from the preview directly
   - [Ctrl] + [A] also works (inputs appear selected but don't copy)
 - Segmented control animation includes a slight overshoot before settling in place
 - Edit mode keyboard navigation overrides harsh focus centering
+- Edit mode tool dropdown's width is responsive as to not overlap the dive list
 
 ## Keyboard Navigation (Edit Mode)
 - [Tab] moves to the next cell

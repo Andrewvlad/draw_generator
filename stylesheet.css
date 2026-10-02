@@ -15,7 +15,9 @@
     --accent-soft: #e8f2ff;
     --bad: #e5484d;
     --warning: #eab308;
+    --toast: #222222;
     --radius: 8px;
+    --knob-shadow: 0 2px 4px rgba(0, 0, 0, 0.18), 0 0 1px rgba(0, 0, 0, 0.1);
     --drawer-size: 320px;
     --drawer-mobile-size: 75%; /* Max height (drawer shrinks to fit content) */
     --drawer-min: 0px; /* Widest row (set on drag start, and includes non-visible settings) */
@@ -160,7 +162,7 @@ button.icon {
         height: 18px;
         border-radius: 50%;
         background: #ffffff;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18), 0 0 1px rgba(0, 0, 0, 0.1);
+        box-shadow: var(--knob-shadow);
         transition: 0.25s;
     }
 
@@ -309,6 +311,102 @@ main {
         width: 8px;
         cursor: col-resize;
         touch-action: none; /* A touch drag resizes rather than scrolls */
+
+        #resizer-tab {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 16px;
+            height: 32px;
+            display: grid;
+            place-items: center;
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-left: none;
+            border-radius: 0 var(--radius) var(--radius) 0;
+            color: var(--muted);
+            translate: -100% -50%; /* Offscreen (left edge) */
+            transition: translate 0.25s;
+
+            main:not(:has(> aside[inert])) & {visibility: hidden} /* Hidden instantly when the drawer opens (otherwise animates behind grip)*/
+
+            @media (prefers-reduced-motion: reduce) {transition: none}
+
+            svg {
+                width: 12px;
+                height: 12px;
+            }
+        }
+
+        /* Separate element, as the indicator does not need to be as wide as the draggable */
+        #resizer-line {
+            position: absolute;
+            inset: 0 auto 0 1px; /* Centered over the drawer's border */
+            width: 3px;
+            background: var(--accent);
+            opacity: 0;
+            transition: opacity 0.15s;
+
+            main:has(> aside[inert]) & {left: 0} /* Flush with the left edge (otherwise 1px gap) */
+        }
+
+        #resizer-grip {
+            position: absolute;
+            top: 50%; /* Center of the border */
+            left: -3px; /* 3px overshoot to the left so that it is centered on the border*/
+            width: 12px;
+            height: 36px;
+            display: grid;
+            place-items: center;
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: 40px;
+            box-shadow: var(--knob-shadow);
+            color: var(--muted);
+            visibility: hidden; /* Technically a no-op since the scaled down grip is smaller than the resizer anyways */
+            opacity: 0;
+            translate: 0 -50%; /* Center around its midpoint */
+            scale: 0.6; /* Grow as it pops in */
+            transition: opacity 0.15s, visibility 0.15s, scale 0.25s;
+
+            @media (prefers-reduced-motion: reduce) {transition: none}
+
+            svg {
+                width: 4px;
+                height: 12px;
+            }
+        }
+
+        @media (hover: hover) {
+            &:hover {
+                #resizer-tab, #resizer-line, #resizer-grip {transition-delay: 0.1s} /* Delayed reveal, so hover must be intentional */
+
+                main:has(> aside[inert]) & #resizer-tab {translate: 0 -50%} /* Unhide pull tab when collapsed */
+
+                #resizer-line {opacity: 1} /* Show hover bar */
+
+                /* Show grip */
+                main:not(:has(> aside[inert])) & #resizer-grip {
+                    visibility: visible;
+                    opacity: 1;
+                    scale: none;
+                }
+            }
+        }
+
+        .resizing & {
+            main:has(> aside[inert]) & #resizer-tab {translate: 0 -50%} /* Since touch devices don't get hover */
+
+            #resizer-line {opacity: 1} /* Since touch devices don't get hover */
+
+            /* Since touch devices don't get hover, AND skip transition (for all devices) */
+            main:not(:has(> aside[inert])) & #resizer-grip {
+                visibility: visible;
+                opacity: 1;
+                scale: none;
+                transition: none; /* Instantly show grip when a drag reopens the drawer, otherwise the grip pops in late (appearance animation) */
+            }
+        }
     }
 
     #drawer-grabber {display: none} /* Mobile only */
@@ -371,7 +469,7 @@ main {
                     display: flex;
                     align-items: center;
                     justify-content: space-between;
-                    gap: 0; /* TODO: Segmented control's design with position absolute adds its own gap */
+                    gap: 4px; /* Minimum space between */
                 }
 
                 /* Only the chosen layout's count */
@@ -745,7 +843,7 @@ footer {
     left: 50%;
     transform: translateX(-50%);
     padding: 12px 18px;
-    background-color: #222222;
+    background-color: var(--toast);
     border-radius: 21px; /* Rounded corners */
     color: #ffffff;
     text-align: center;
