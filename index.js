@@ -40,11 +40,11 @@ const listDives = (dives, slots = 5, locked) => {
 const divesAsImages = (dives) => {
     if (typeof dives === 'string') return ''; // Exit early if it's an error string
 
-    // Filters out invalid images
-    const imageHTML = (point, src = imagePaths[point]) => src && `<img src="${src}" alt="${point}">`;
-    const imageRowHTML = (dive) => `<div>${dive.map(point => imageHTML(point)).join('')}</div>`;
+    const imageHTML = (point) => `<img src="${imagePaths[point]}" alt="${point}">`;
+    const imageRowHTML = (points) => `<div data-draw="${points.join(' - ')}">${points.map(imageHTML).join('')}</div>`;
 
-    return dives.map(imageRowHTML).join('');
+    // Filters out invalid formations
+    return dives.map(dive => imageRowHTML(dive.filter(point => imagePaths[point]))).join('');
 };
 
 // Plain text for the clipboard, without hidden commas

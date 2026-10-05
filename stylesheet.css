@@ -1058,17 +1058,32 @@ footer {
 
         /* Each dive is --page-height tall, so a column holds exactly one */
         #diveImages > div {
+            --draw-size: min(15px, 11cqi); /* Shrinks to fit the widest draw within the column */
+            container-type: inline-size; /* So cqi measures the column (instead of page) */
             flex-direction: column;
             height: calc(var(--page-height) - 0.2mm) !important; /* 0.2 reserved as slack */
         }
 
-        /* Keep the number circle off the page's edge */
-        #diveImages > div::before {margin-top: 8px}
+        /* Keep the number off the page's edge and drop its circle */
+        #diveImages > div::before {
+            aspect-ratio: auto; /* Remove the aspect-ratio: 1 used for making the circles */
+            margin-top: 8px;
+            background: none;
+            color: var(--foreground);
+        }
 
-        /* The longest dive's images share the height beneath the counter */
+        /* Display the draw after the count */
+        #diveImages > div::after {
+            content: attr(data-draw);
+            font-size: var(--draw-size);
+            white-space: nowrap;
+        }
+
+        /* The longest dive's images share the height beneath the counter and draw */
         #diveImages > div > img {
+            order: 1; /* Below the ::after (draw) */
             max-width: 100% !important;
-            max-height: calc((100% - var(--counter-size) - 8px) / var(--images-per-dive)) !important;
+            max-height: calc((100% - 8px - 40px - 1.5 * var(--draw-size)) / var(--images-per-dive)) !important; /* Counter's margin + 40px counter + the horizontal text draw */
         }
     }
 }
