@@ -549,6 +549,8 @@
         document.getElementById("preview-text").checked = true;
         syncThumb(previewSegment);
 
+        if (!editing) getSelection().removeAllRanges(); // Clear selection
+
         setEditable();
     });
 
