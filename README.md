@@ -18,6 +18,7 @@ Hosted [here](https://andrewvlad.github.io/draw_generator/) on GitHub.
 - Perfectly random (not context-aware!)
 - Creating/editing dives
   - Lock edits in place (switches to simpler, context-aware random fill)
+  - Edits to formations that conflict with your constraints are highlighted in red (hover for explanation)
 - Copy to clipboard
 - Export as PDF
   - Either vertical or horizontal

@@ -630,8 +630,11 @@
 
     // Write the cells back into generatedDives, then paint rule violations
     function syncEdits() {
-        // Clear all (old) invalid markings
-        diveList.querySelectorAll(".invalid").forEach(marked => marked.classList.remove("invalid"));
+        // Clear all (old) invalid markings and tooltips
+        diveList.querySelectorAll(".invalid").forEach(marked => {
+            marked.classList.remove("invalid");
+            marked.removeAttribute("title");
+        });
 
         const rows = [...diveList.querySelectorAll("li")];
         const filledCells = rows.map(row => [...row.querySelectorAll(".cell")].filter(cell => cell.textContent)); // Skip empty cells
@@ -639,10 +642,16 @@
         // Set the new draw
         generatedDives = filledCells.map(cells => cells.map(cell => parsePoint(cell.textContent)));
 
-        // Mark cells & rows invalid
+        // Mark cells & rows invalid, and add a tooltip with the reasoning (title)
         validateDraw(generatedDives, drawSettings()).forEach((report, i) => {
-            report.cells.forEach((invalid, j) => filledCells[i][j].classList.toggle("invalid", invalid));
+            report.cells.forEach((brokenRule, j) => {
+                if (!brokenRule) return; // Early exit, as empty titles (tooltips) still show
+                filledCells[i][j].classList.add("invalid");
+                filledCells[i][j].title = brokenRule;
+            });
+
             rows[i].classList.toggle("invalid", report.invalid);
+            if (report.shortRow) rows[i].title = report.shortRow; // Row-level title (tooltip) for too-few points
         });
     }
 

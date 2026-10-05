@@ -54,7 +54,7 @@ const divesAsText = (dives) => {
     return dives.map(dive => dive.join(", ")).join("\n");
 };
 
-// Rule violations per cell and per dive, for the edit mode highlighting
+// Rule violations per cell and per dive, for the edit mode highlighting and tooltips
 // Invalidation can only occur due to edit, so technically can be scoped to per-cell edit, instead of against the
 //  whole dive each edit. However, it's an unnecessary optimization and headache to manage while still adding features
 const validateDraw = (dives, {
@@ -68,7 +68,6 @@ const validateDraw = (dives, {
     const transitions = new Map();
 
     const tally = (counts, key) => counts.set(key, (counts.get(key) ?? 0) + 1);
-    const inPool = (point) => (useRandoms && randoms.includes(point)) || (useBlocks && blocks.includes(point));
 
     // Tally up each dive's exit and transitions
     // Done up front instead of during the invalidation check, so it doesn't have to backtrack for matching invalidation
@@ -78,26 +77,28 @@ const validateDraw = (dives, {
     });
 
     // Invalidate cells (and their matching pair if appropriate)
-    return dives.map(dive => { // For each dive:
+    return dives.map(dive => { // For each dive (row):
         let curPoints = 0;
 
-        const cells = dive.map((point, i) => { // For each point:
-            const invalid = !inPool(point) // If outside of dive pool
-                || dive.indexOf(point) !== dive.lastIndexOf(point) // If it occurs multiple times in the same dive
-                || curPoints >= minPoints // Cell exceeds point cap
-                || (uniqueExits && !i && exits.get(point) > 1) // Check exits (only if first point in the dive)
-                // Check transitions
-                || (uniqueTransitions && dive.length > 1 && transitions.get(transitionKey(dive.at(i - 1), point)) > 1);
+        const cells = dive.map((point, i) => { // For each point (cell):
+            const brokenRule = (curPoints >= minPoints && 'Dive already has too many points') // Point cap first, as resolving it may also solve the other rules
+                || (!randoms.includes(point) && !blocks.includes(point) && 'Invalid formation') // If outside of dive pool
+                || (!useRandoms && randoms.includes(point) && 'Randoms are excluded')
+                || (!useBlocks && blocks.includes(point) && 'Blocks are excluded')
+                || (dive.indexOf(point) !== dive.lastIndexOf(point) && 'Repeated in this dive') // If formation occurs multiple times in the same dive
+                || (uniqueExits && !i && exits.get(point) > 1 && 'Repeated exit') // Check exits
+                || (uniqueTransitions && dive.length > 1 && transitions.get(transitionKey(dive.at(i - 1), point)) > 1 && 'Repeated transition'); // Check transitions
 
             // Count total points (to prevent too few points)
             curPoints += pointValue(point); // Cannot increment first, since generation stops after satisfying min point
 
-            return invalid;
+            return brokenRule;
         });
 
         return {
             cells, // Mark invalid cells
-            invalid: curPoints < minPoints || cells.some(Boolean), // Mark invalid rows (also too few points)
+            invalid: curPoints < minPoints || cells.some(Boolean), // Mark row as invalid
+            shortRow: curPoints < minPoints && `Too few points (${curPoints})`, // If row needs a tooltip
         };
     });
 };
