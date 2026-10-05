@@ -33,7 +33,7 @@
             <div class="section-body">
                 <div>
                     <label for="divePool">Discipline</label>
-                    <select id="divePool" onchange="changePool()">
+                    <select id="divePool" onchange="changeDiscipline()">
                         <option value="4-way_fs">4-way</option>
                         <option value="8-way_fs">8-way</option>
                     </select>
@@ -50,11 +50,16 @@
                 </div>
 
                 <div>
+                    <label for="class">Class</label>
+                    <select id="class" onchange="changeClass()"></select>
+                </div>
+
+                <div>
                     <label for="points">Points</label>
-                    <select id="points" onchange="addToPage()">
+                    <select id="points" onchange="changePoints()">
                         <option value="3">3 - 4</option>
                         <option value="4">4 - 5</option>
-                        <option value="5">5 - 6</option>
+                        <option value="5" selected>5 - 6</option>
                     </select>
                 </div>
             </div>
@@ -271,6 +276,7 @@
 <!--Scripts-->
 <script src="assets/diagrams/4-way_fs/rhythm/index.js"></script> <!--Load all 4-way images-->
 <script src="assets/diagrams/8-way_fs/rhythm/index.js"></script> <!--Load all 8-way images-->
+<script src="assets/diagrams/index.js"></script> <!--Class pools from FSCards-->
 <script src="index.js"></script>
 <!--Element selection-->
 <script>
@@ -284,10 +290,22 @@
     const outdoorDiv = document.getElementById("outdoorDiv");
     const useOutdoor = document.getElementById("useOutdoor");
 
-    // Image set per discipline, and whether it offers an outdoor variant
+    // Combine classes with their expected point totals
+    const classesWithPoints = (classes, points) => classes
+        .filter(({key}) => key in points) // Only include classes with defined point totals (drops rookie and CISM)
+        .map(diveClass => ({...diveClass, points: points[diveClass.key]}));
+
+    // Set the images, classes, and points (defined by the class)
     const DISCIPLINES = {
-        "4-way_fs": {images: () => imagePaths4Way},
-        "8-way_fs": {images: () => useOutdoor.checked ? imagePaths8WayOutdoor : imagePaths8Way, hasOutdoor: true},
+        "4-way_fs": {
+            images: () => imagePaths4Way,
+            classes: classesWithPoints(CLASSES["4-way"], {beginner: 3, intermediate: 4, open: 5}),
+        },
+        "8-way_fs": {
+            images: () => useOutdoor.checked ? imagePaths8WayOutdoor : imagePaths8Way,
+            hasOutdoor: true, // Only 8-way has an outdoor variant
+            classes: classesWithPoints(CLASSES["8-way"], {intermediate: 4, open: 5}),
+        },
     };
 
     function syncPool() {
@@ -469,6 +487,7 @@
 
     function drawSettings() {
         const include = includeSegment.querySelector(":checked").value;
+        const diveClass = selectedClass();
 
         return {
             numDives: numDives.value,
@@ -477,8 +496,62 @@
             uniqueTransitions: uniqueTransitions.checked,
             useRandoms: include !== "blocks",
             useBlocks: include !== "randoms",
+            classRandoms: diveClass.randoms,
+            classBlocks: diveClass.blocks,
+            classLabel: diveClass.label,
         };
     }
+</script>
+<!--Class-->
+<script>
+    const classDiscipline = document.getElementById("class");
+
+    const classList = () => DISCIPLINES[divePool.value].classes;
+    const selectedClass = () => classList().find(({key}) => key === classDiscipline.value);
+
+    // Rebuild the class dropdown when the discipline changes
+    function fillClasses() {
+        const previousClass = classDiscipline.value;
+        classDiscipline.innerHTML = classList().map(({key, label}) => `<option value="${key}">${label}</option>`).join("");
+        classDiscipline.value = previousClass;
+        // If the selected class does not belong to the discipline, find the closest based on selected points
+        if (!classDiscipline.value) selectClassFor(minPoints.value);
+    }
+
+    // Select the class that matches the selected points, otherwise switch the class (and therefore points) to the class with the fewest points
+    function selectClassFor(points) {
+        classDiscipline.value = classList().find(diveClass => diveClass.points >= points).key;
+    }
+
+    // Point selections that don't belong to the class (e.x. 3 - 4 in 8-way) show invalid when selected
+    function markPoints() {
+        const diveClass = selectedClass();
+        const expected = minPoints.querySelector(`[value="${diveClass.points}"]`);
+        const message = expected.selected ? "" : `${divePool.selectedOptions[0].text} ${diveClass.label} expects ${expected.text} points`;
+        minPoints.setCustomValidity(message); // Mark as invalid
+        minPoints.title = message;
+    }
+
+    function changeClass() {
+        minPoints.value = selectedClass().points;
+        markPoints();
+        addToPage();
+    }
+
+    function changePoints() {
+        selectClassFor(minPoints.value);
+        markPoints();
+        addToPage();
+    }
+
+    function changeDiscipline() {
+        syncPool();
+        fillClasses();
+        changeClass();
+    }
+
+    fillClasses();
+    markPoints();
 </script>
 <!--Dive generation-->
 <script>
@@ -506,7 +579,7 @@
 
     // Add dives to the page
     function addToPage() {
-        if (!numDives.checkValidity() || !minPoints.checkValidity()) return;
+        if (!numDives.checkValidity()) return;
 
         // Generate the draw around any locked cells
         if (lockToggle.ariaPressed === "true") {

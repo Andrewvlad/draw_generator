@@ -63,6 +63,9 @@ const validateDraw = (dives, {
     uniqueTransitions = false,
     useRandoms = true,
     useBlocks = true,
+    classRandoms = randoms,
+    classBlocks = blocks,
+    classLabel, // Needed for the validation tooltip
 }) => {
     const exits = new Map();
     const transitions = new Map();
@@ -82,7 +85,8 @@ const validateDraw = (dives, {
 
         const cells = dive.map((point, i) => { // For each point (cell):
             const brokenRule = (curPoints >= minPoints && 'Dive already has too many points') // Point cap first, as resolving it may also solve the other rules
-                || (!randoms.includes(point) && !blocks.includes(point) && 'Invalid formation') // If outside of dive pool
+                || (!randoms.includes(point) && !blocks.includes(point) && 'Invalid formation') // Not in any pool
+                || (!classRandoms.includes(point) && !classBlocks.includes(point) && `Not in the ${classLabel} pool`) // If outside of dive pool
                 || (!useRandoms && randoms.includes(point) && 'Randoms are excluded')
                 || (!useBlocks && blocks.includes(point) && 'Blocks are excluded')
                 || (dive.indexOf(point) !== dive.lastIndexOf(point) && 'Repeated in this dive') // If formation occurs multiple times in the same dive
@@ -110,6 +114,8 @@ const main = ({
     uniqueTransitions = false,
     useRandoms = true,
     useBlocks = true,
+    classRandoms = randoms,
+    classBlocks = blocks,
 }) => {
     // Fewest formations a dive can use to reach minPoints (used for uniqueTransitions error)
     const minFormations = useBlocks ? Math.ceil(minPoints / 2) : minPoints;
@@ -148,8 +154,8 @@ const main = ({
             // Fill empty pool
             if (!pool.length) {
                 pool = [
-                    ...useRandoms ? randoms : [],
-                    ...useBlocks ? blocks : [],
+                    ...useRandoms ? classRandoms : [],
+                    ...useBlocks ? classBlocks : [],
                 ];
                 if (uniqueExits && pool.length < numDives) return "Number of dives exceeds the amount of unique exits";
                 if (uniqueTransitions && numDives * minFormations > pool.length * (pool.length - 1))
@@ -202,14 +208,16 @@ const fillAroundLocks = ({
     uniqueTransitions = false,
     useRandoms = true,
     useBlocks = true,
+    classRandoms = randoms,
+    classBlocks = blocks,
     locked,
 }) => {
     // Fewest formations a dive can use to reach minPoints (used for uniqueTransitions error)
     const minFormations = useBlocks ? Math.ceil(minPoints / 2) : minPoints;
     const MAX_ATTEMPTS = 100; // Before succumbing to a rule break
     const fullPool = [
-        ...useRandoms ? randoms : [],
-        ...useBlocks ? blocks : [],
+        ...useRandoms ? classRandoms : [],
+        ...useBlocks ? classBlocks : [],
     ];
 
     if (uniqueExits && fullPool.length < numDives) return 'Number of dives exceeds the amount of unique exits';

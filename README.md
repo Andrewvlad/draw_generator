@@ -8,6 +8,7 @@ Hosted [here](https://andrewvlad.github.io/draw_generator/) on GitHub.
 ## Options
 - 4/8-way
 - Number of dives & points
+- Class
 - Toggle between text and image preview
 - Randoms and/or blocks
 - Unique exits

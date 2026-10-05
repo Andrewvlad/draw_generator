@@ -1,0 +1,63 @@
+# Sync up with rules from FSCards
+name: Sync FSCards
+
+on:
+    schedule:
+        - cron: '17 7 * * *'
+    workflow_dispatch:
+
+permissions:
+    contents: write
+    pull-requests: write
+
+jobs:
+    sync:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v7 # Check out this repo
+
+            - uses: actions/checkout@v7 # Check out the FSCards repo
+              with:
+                  repository: Andrewvlad/FSCards
+                  path: fscards
+                  sparse-checkout: assets/diagrams/*/index.js
+                  sparse-checkout-cone-mode: false
+
+            - name: Generate class rules
+              shell: node {0}
+              run: |
+                  const fs = require('fs');
+                  const vm = require('vm');
+
+                  const DISCIPLINES = ['4-way', '8-way'];
+
+                  const literal = (value) => Array.isArray(value) ? `[${value.map(literal).join(', ')}]`
+                      : typeof value === 'object' ? `{${Object.entries(value).map(([key, item]) => `${key}: ${literal(item)}`).join(', ')}}`
+                      : typeof value === 'string' ? `'${value.replace(/['\\]/g, '\\$&')}'`
+                      : String(value);
+
+                  // Source the class rules from each respective discipline's file
+                  const lines = DISCIPLINES.flatMap(discipline => {
+                      const source = fs.readFileSync(`fscards/assets/diagrams/${discipline}/index.js`, 'utf8');
+                      const globalName = source.match(/^const (\w+)/m)[1];
+                      const classes = vm.runInNewContext(`${source}\n${globalName}.classes`);
+                      return [`    '${discipline}': [`, ...classes.map(diveClass => `        ${literal(diveClass)},`), '    ],'];
+                  });
+
+                  fs.writeFileSync('assets/diagrams/index.js', [
+                      `// Populated using FSCards by the sync-fscards GitHub Action`,
+                      'const CLASSES = {',
+                      ...lines,
+                      '};',
+                      '',
+                  ].join('\n'));
+
+            - name: Open PR
+              uses: peter-evans/create-pull-request@v8
+              with:
+                  add-paths: assets/diagrams/index.js
+                  commit-message: 'chore: Sync FSCards class rules'
+                  branch: sync-fscards
+                  title: 'Sync FSCards class rules'
+                  reviewers: Andrewvlad
+                  delete-branch: true
