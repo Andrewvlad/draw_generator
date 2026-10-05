@@ -67,7 +67,8 @@ body:not(:has(#showImages:checked)) #diveImages {
 
     * {display: none}
 }
-body:has(#showImages:checked) #dives {display: none}
+body:has(#showImages:checked) #dives:has(ol) {display: none} /* An error message is shown in both previews */
+#diveImages:empty {display: none} /* Hide on error message */
 
 /* Resize drawer cursor takes priority (for when drawer collapses, but the user still is dragging) */
 .resizing * {cursor: col-resize !important}
@@ -850,12 +851,12 @@ footer {
     opacity: 0; /* Use opacity over visibility: hidden, as screen readers permanently ignore changes to hidden statuses*/
     pointer-events: none; /* Clicks pass through the toast */
 
-    /* Solid for 0.25s, then fades out over 1s */
-    &.show {animation: toast-fade 1.25s}
+    /* Solid for 1s, then fades out over 1s */
+    &.show {animation: toast-fade 2s}
 }
 
 @keyframes toast-fade {
-    0%, 20% {
+    0%, 50% {
         opacity: 1;
         animation-timing-function: ease-out;
     }

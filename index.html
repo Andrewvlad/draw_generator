@@ -657,9 +657,9 @@
         });
     }
 
-    // Re-check the draw after a rule has been switched off
+    // Re-check the draw after a rule has been switched off, or generate one to replace an error message
     function recheckDraw() {
-        if (diveList.querySelector("li")) syncEdits();
+        diveList.querySelector("li") ? syncEdits() : addToPage();
     }
 
     // Rebuild diveImages after edits are complete. Focusout so that [CTRL+P] is also caught
