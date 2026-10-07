@@ -54,6 +54,11 @@
                     <select id="class" onchange="changeClass()"></select>
                 </div>
 
+                <!--Between the fields for keyboard navigation ordering (anchored to the left of the class and points fields)-->
+                <button type="button" id="class-points-link" title="Toggle class and points link" aria-label="Toggle class and points link" aria-pressed="true">
+                    <svg viewBox="5 0 14 30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><mask id="chain-knockout" maskUnits="userSpaceOnUse" x="0" y="-5" width="24" height="40"><rect x="0" y="-5" width="24" height="40" fill="white" stroke="none"/><path d="M12 8.5V21.5" stroke="black" stroke-width="4"/></mask><g id="chain-top"><path mask="url(#chain-knockout)" d="M8 5a4 4 0 0 1 8 0v4a4 4 0 0 1-8 0z"/><path fill="currentColor" stroke="none" d="M11 8.5a1 1 0 0 1 2 0V15.5l-1 1-1-1z"/></g><g id="chain-bottom"><path mask="url(#chain-knockout)" d="M8 21a4 4 0 0 1 8 0v4a4 4 0 0 1-8 0z"/><path fill="currentColor" stroke="none" d="M11 21.5a1 1 0 0 0 2 0V14.5l-1-1-1 1z"/></g><path id="burst" stroke-width="1.2" d="M5.6 12.7l2 1.4M5.6 17.3l2-1.4M18.4 12.7l-2 1.4M18.4 17.3l-2-1.4"/></svg>
+                </button>
+
                 <div>
                     <label for="points">Points</label>
                     <select id="points" onchange="changePoints()">
@@ -505,9 +510,11 @@
 <!--Class-->
 <script>
     const classDiscipline = document.getElementById("class");
+    const classPointLink = document.getElementById("class-points-link");
 
     const classList = () => DISCIPLINES[divePool.value].classes;
     const selectedClass = () => classList().find(({key}) => key === classDiscipline.value);
+    const linked = () => classPointLink.ariaPressed === "true";
 
     // Rebuild the class dropdown when the discipline changes
     function fillClasses() {
@@ -527,19 +534,19 @@
     function markPoints() {
         const diveClass = selectedClass();
         const expected = minPoints.querySelector(`[value="${diveClass.points}"]`);
-        const message = expected.selected ? "" : `${divePool.selectedOptions[0].text} ${diveClass.label} expects ${expected.text} points`;
+        const message = !linked() || expected.selected ? "" : `${divePool.selectedOptions[0].text} ${diveClass.label} expects ${expected.text} points`;
         minPoints.setCustomValidity(message); // Mark as invalid
         minPoints.title = message;
     }
 
     function changeClass() {
-        minPoints.value = selectedClass().points;
+        if (linked()) minPoints.value = selectedClass().points;
         markPoints();
         addToPage();
     }
 
     function changePoints() {
-        selectClassFor(minPoints.value);
+        if (linked()) selectClassFor(minPoints.value);
         markPoints();
         addToPage();
     }
@@ -549,6 +556,12 @@
         fillClasses();
         changeClass();
     }
+
+    classPointLink.addEventListener("click", () => {
+        classPointLink.ariaPressed = !linked();
+        // TODO: Consider force-updating the points value when toggled on
+        markPoints(); // Linking does not forcibly replace the points value, so validation must be ran
+    });
 
     fillClasses();
     markPoints();

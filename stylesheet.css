@@ -461,6 +461,7 @@ main {
             }
 
             .section-body {
+                position: relative; /* Keeps the class link inside the drawer's scroll */
                 display: flex;
                 flex-wrap: wrap;
                 align-items: center;
@@ -478,6 +479,98 @@ main {
                 /* Only the chosen layout's count */
                 &:has(#layout-rows:checked) > div:has(> #columns-per-page),
                 &:has(#layout-columns:checked) > div:has(> #rowsPerPage) {display: none}
+
+                /* ------------------- */
+                /* Class - Points link */
+                /* ------------------- */
+
+                /* Anchors for the class-points link */
+                #class {anchor-name: --class-field}
+                #points {anchor-name: --points-field}
+
+                #class-points-link {
+                    --line-width: 2px; /* Line width shrinks when toggled off */
+                    --split: 0px; /* Variable that is updated for how far the link splits */
+
+                    position: absolute;
+                    top: anchor(--class-field center);
+                    bottom: anchor(--points-field center);
+                    right: anchor(--class-field left);
+                    width: 28px; /* 14px SVG width + buffer so the chain is centered and the outline does not touch the fields */
+                    border: none; /* Drop button border */
+                    color: var(--accent);
+                    transition: color 0.25s;
+
+                    /* Unlinking breaks the SVG in half, pulls it apart, and makes the corner 1px thick */
+                    &[aria-pressed="false"] {
+                        --line-width: 1px;
+                        --split: 2.5px; /* Opens a 2.5px break in the bar */
+                        color: var(--muted);
+                    }
+
+                    /* Hover and focus highlight the chain, rather than the wider button */
+                    @media (hover: hover) {
+                        &:hover svg {
+                            background: rgba(0, 0, 0, 0.04); /* Inner background */
+                            box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.04); /* Outer background */
+                        }
+                    }
+
+                    &:focus-visible {
+                        outline: none; /* The hover outline goes around the SVG, instead of the button */
+
+                        svg {
+                            outline: 2px solid var(--accent);
+                            outline-offset: 4px; /* 2px larger than needed as the outline needs to leave space for the broken chain's height */
+                        }
+                    }
+
+                    /* The cornered line running from the respective field to the chain */
+                    &::before, &::after {
+                        content: "";
+                        position: absolute;
+                        left: calc(50% - var(--line-width) / 2); /* Centers the line to the chain */
+                        right: 0;
+                        border: var(--line-width) solid; /* No animation for this, as it made the centering look off */
+                        border-right: none;
+                    }
+                    &::before {
+                        top: calc(var(--line-width) / -2); /* Centers the line to the field */
+                        bottom: calc(50% + 14px + var(--split)); /* Line ends at the chain (1px overshoot to prevent gaps) */
+                        border-bottom: none;
+                        border-top-left-radius: 6px;
+                        transition: bottom 0.25s; /* The tail moves up/down with the chain's top half */
+                    }
+                    &::after {
+                        top: calc(50% + 14px + var(--split)); /* Line ends at the chain (1px overshoot to prevent gaps) */
+                        bottom: calc(var(--line-width) / -2); /* Centers the line to the field */
+                        border-top: none;
+                        border-bottom-left-radius: 6px;
+                        transition: top 0.25s; /* The tail moves down/up with the chain's bottom half */
+                    }
+
+                    svg {
+                        width: 14px;
+                        height: 30px;
+                        overflow: visible; /* Otherwise the chain pieces clip when translated */
+                        margin: 0 auto;
+                        border-radius: 7px; /* For rounding the hover and outline */
+                    }
+
+                    /* Translate the chain pieces by the split amount */
+                    #chain-top {translate: 0 calc(-1 * var(--split))}
+                    #chain-bottom {translate: 0 var(--split)}
+
+                    #burst {opacity: 0}
+                    &[aria-pressed="false"] #burst {opacity: 1}
+
+                    /* Smooth transition when breaking the lock, while line thickness change is instant */
+                    #chain-top, #chain-bottom, #burst {transition: translate 0.25s, opacity 0.25s}
+
+                    @media (prefers-reduced-motion: reduce) {
+                        &, &::before, &::after, #chain-top, #chain-bottom, #burst {transition: none}
+                    }
+                }
             }
 
             label {
