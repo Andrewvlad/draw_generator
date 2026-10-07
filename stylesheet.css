@@ -128,13 +128,13 @@ button.icon {
     color: var(--muted);
 
     @media (hover: hover) {
-        &:hover:not(:disabled) {
+        &:hover:not(:disabled, [aria-pressed="true"]) {
             background: var(--bg);
             color: var(--text);
         }
     }
 
-    /* AFTER the hover rule so a pressed toggle keeps its accent, regardless of hover */
+    /* A pressed toggle keeps its accent, regardless of hover */
     &[aria-pressed="true"] {
         border: 1px solid var(--accent);
         background: var(--accent-soft);
