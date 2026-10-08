@@ -1101,7 +1101,7 @@ footer {
         }
 
         #diveImages > div > img {
-            max-width: 100% !important; /* [CHECK FOR REDUNDANCY] */
+            max-width: calc((100% - var(--counter-size) - 8px) / var(--images-per-dive)) !important;
             max-height: calc(100% - 2px) !important;
         }
 
@@ -1152,12 +1152,13 @@ footer {
             column-rule: 1px solid black;
         }
 
-        /* Each dive is --page-height tall, so a column holds exactly one */
+        /* Each dive is --page-height tall */
         #diveImages > div {
             --draw-size: min(15px, 11cqi); /* Shrinks to fit the widest draw within the column */
+            --dive-height: calc(var(--page-height) - 0.2mm); /* 0.2mm reserved as slack */
             container-type: inline-size; /* So cqi measures the column (instead of page) */
             flex-direction: column;
-            height: calc(var(--page-height) - 0.2mm) !important; /* 0.2 reserved as slack */
+            height: var(--dive-height) !important;
         }
 
         /* Keep the number off the page's edge and drop its circle */
@@ -1175,11 +1176,15 @@ footer {
             white-space: nowrap;
         }
 
-        /* The longest dive's images share the height beneath the counter and draw */
+        /* Every image shares the same width, determined by the tallest dive */
         #diveImages > div > img {
             order: 1; /* Below the ::after (draw) */
-            max-width: 100% !important;
-            max-height: calc((100% - 8px - 40px - 1.5 * var(--draw-size)) / var(--images-per-dive)) !important; /* Counter's margin + 40px counter + the horizontal text draw */
+
+            /* Deconstruction of max-width based off of max-height, and the heightInWidths ratio of the tallest dive */
+            /* Defining max-width in this way defines max-height */
+            max-width: min(100%, (var(--dive-height) - 8px - 40px - 1.5 * var(--draw-size)) / var(--tallest-dive-in-widths)) !important; /* max-height = counter's margin + 40px counter + the written text draw */
+            /*max-height: calc((100% - 8px - 40px - 1.5 * var(--draw-size)) / var(--images-per-dive));*/
+            max-height: none !important; /* Override preview's 300px cap */
         }
     }
 }

@@ -13,6 +13,7 @@ Hosted [here](https://andrewvlad.github.io/draw_generator/) on GitHub.
 - Randoms and/or blocks
 - Unique exits
 - Unique transitions
+- Pick between any diagram (image) provider
 
 ## Features
 - Instant generation

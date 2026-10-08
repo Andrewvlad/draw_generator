@@ -1,4 +1,4 @@
-# Sync up with rules from FSCards
+# Sync up with rules and images from FSCards
 name: Sync FSCards
 
 on:
@@ -20,10 +20,14 @@ jobs:
               with:
                   repository: Andrewvlad/FSCards
                   path: fscards
-                  sparse-checkout: assets/diagrams/*/index.js
+                  sparse-checkout: | # Skips figures/ and thumbs/
+                      assets/diagrams/4-way/index.js
+                      assets/diagrams/4-way/*/*.webp
+                      assets/diagrams/8-way/index.js
+                      assets/diagrams/8-way/*/*.webp
                   sparse-checkout-cone-mode: false
 
-            - name: Generate class rules
+            - name: Sync class rules and image sets
               shell: node {0}
               run: |
                   const fs = require('fs');
@@ -36,18 +40,52 @@ jobs:
                       : typeof value === 'string' ? `'${value.replace(/['\\]/g, '\\$&')}'`
                       : String(value);
 
-                  // Source the class rules from each respective discipline's file
-                  const lines = DISCIPLINES.flatMap(discipline => {
+                  const classLines = [];
+                  const imageSetLines = [];
+                  const indoorLines = [];
+
+                  // Source the class rules and image sets from each respective discipline's file
+                  for (const discipline of DISCIPLINES) {
                       const source = fs.readFileSync(`fscards/assets/diagrams/${discipline}/index.js`, 'utf8');
                       const globalName = source.match(/^const (\w+)/m)[1];
-                      const classes = vm.runInNewContext(`${source}\n${globalName}.classes`);
-                      return [`    '${discipline}': [`, ...classes.map(diveClass => `        ${literal(diveClass)},`), '    ],'];
-                  });
+                      const {names, classes, sets} = vm.runInNewContext(`${source}\n${globalName}`);
+
+                      classLines.push(`    '${discipline}': [`, ...classes.map(diveClass => `        ${literal(diveClass)},`), '    ],');
+                      imageSetLines.push(`    '${discipline}': ${literal(Object.keys(sets))},`);
+
+                      const files = Object.keys(sets).flatMap(set => Object.keys(names).map(key => `${set}/${key}.webp`));
+
+                      // Only 8-way has a separate indoor pool
+                      if (discipline === '8-way') {
+                          for (const [set, filename] of Object.entries(sets)) {
+                              // Only the indoor files that differ from <set>/<key>.webp
+                              const indoor = Object.fromEntries(Object.keys(names)
+                                  .map(key => [key, filename(key, true)])
+                                  .map(([key, file]) => [key, file.includes('/') ? file : `${set}/${file}`]) // Missing USPA indoor images falls back to FAI indoor set
+                                  .filter(([key, path]) => path !== `${set}/${key}.webp`));
+                              indoorLines.push(`    ${set}: ${literal(indoor)},`);
+                              files.push(...Object.values(indoor));
+                          }
+                      }
+
+                      // Mirror only the images the draw generator shows
+                      fs.rmSync(`assets/diagrams/${discipline}`, {recursive: true, force: true});
+                      for (const file of files) fs.cpSync(`fscards/assets/diagrams/${discipline}/${file}`, `assets/diagrams/${discipline}/${file}`);
+                  }
 
                   fs.writeFileSync('assets/diagrams/index.js', [
-                      `// Populated using FSCards by the sync-fscards GitHub Action`,
+                      '// Populated using FSCards by the sync-fscards GitHub Action',
                       'const CLASSES = {',
-                      ...lines,
+                      ...classLines,
+                      '};',
+                      '',
+                      'const IMAGE_SETS = {',
+                      ...imageSetLines,
+                      '};',
+                      '',
+                      '// Only 8-way has a separate indoor pool',
+                      'const INDOOR_IMAGES = {',
+                      ...indoorLines,
                       '};',
                       '',
                   ].join('\n'));
@@ -55,9 +93,9 @@ jobs:
             - name: Open PR
               uses: peter-evans/create-pull-request@v8
               with:
-                  add-paths: assets/diagrams/index.js
-                  commit-message: 'chore: Sync FSCards class rules'
+                  add-paths: assets/diagrams
+                  commit-message: 'chore: Sync FSCards class rules and image sets'
                   branch: sync-fscards
-                  title: 'Sync FSCards class rules'
+                  title: 'Sync FSCards class rules and image sets'
                   reviewers: Andrewvlad
                   delete-branch: true

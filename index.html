@@ -34,14 +34,15 @@
                 <div>
                     <label for="divePool">Discipline</label>
                     <select id="divePool" onchange="changeDiscipline()">
-                        <option value="4-way_fs">4-way</option>
-                        <option value="8-way_fs">8-way</option>
+                        <option value="4-way">4-way</option>
+                        <option value="8-way">8-way</option>
                     </select>
                 </div>
 
+                <!--TODO: Consider moving to the Images section-->
                 <div id="outdoorDiv" hidden><!--hidden technically dead from parent flex style (left for readability)-->
                     <label for="useOutdoor">Outdoor</label>
-                    <input type="checkbox" id="useOutdoor" class="toggle" role="switch" onchange="changePool()">
+                    <input type="checkbox" id="useOutdoor" class="toggle" role="switch" onchange="changePool()" checked>
                 </div>
 
                 <div>
@@ -88,15 +89,27 @@
                 </div>
 
                 <div>
-                    <label for="uniqueExits">Unique Exits</label>
+                    <label for="uniqueExits">Unique exits</label>
                     <input type="checkbox" id="uniqueExits" class="toggle" role="switch" onchange="checked ? addToPage() : recheckDraw()">
                 </div>
 
                 <div>
-                    <label for="uniqueTransitions" title="Transitions are basic-unique (similar formations are still treated as unique)">Unique Transitions*</label>
+                    <label for="uniqueTransitions" title="Transitions are basic-unique (similar formations are still treated as unique)">Unique transitions*</label>
                     <input type="checkbox" id="uniqueTransitions" class="toggle" role="switch" onchange="checked ? addToPage() : recheckDraw()">
                 </div>
 
+            </div>
+        </details>
+        <details id="images-section">
+            <summary>
+                Images
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+            </summary>
+            <div class="section-body">
+                <div>
+                    <label for="image-set">Image set</label>
+                    <select id="image-set" data-preferred="Rhythm" onchange="changeImageSet()"></select>
+                </div>
             </div>
         </details>
         <details id="print-section">
@@ -189,6 +202,12 @@
 
                 if (!(element.id in stored)) return;
 
+                // Restore the image set preference
+                if ("preferred" in element.dataset) {
+                    element.dataset.preferred = stored[element.id];
+                    return;
+                }
+
                 const key = stateKey(element);
 
                 if (key !== "value") {
@@ -279,9 +298,7 @@
 
 
 <!--Scripts-->
-<script src="assets/diagrams/4-way_fs/rhythm/index.js"></script> <!--Load all 4-way images-->
-<script src="assets/diagrams/8-way_fs/rhythm/index.js"></script> <!--Load all 8-way images-->
-<script src="assets/diagrams/index.js"></script> <!--Class pools from FSCards-->
+<script src="assets/diagrams/index.js"></script> <!--Class pools and image sets from FSCards-->
 <script src="index.js"></script>
 <!--Element selection-->
 <script>
@@ -294,38 +311,63 @@
     const divePool = document.getElementById("divePool");
     const outdoorDiv = document.getElementById("outdoorDiv");
     const useOutdoor = document.getElementById("useOutdoor");
+    const imageSet = document.getElementById("image-set");
 
     // Combine classes with their expected point totals
     const classesWithPoints = (classes, points) => classes
         .filter(({key}) => key in points) // Only include classes with defined point totals (drops rookie and CISM)
         .map(diveClass => ({...diveClass, points: points[diveClass.key]}));
 
-    // Set the images, classes, and points (defined by the class)
+    // Set the classes and points (defined by the class)
     const DISCIPLINES = {
-        "4-way_fs": {
-            images: () => imagePaths4Way,
-            classes: classesWithPoints(CLASSES["4-way"], {beginner: 3, intermediate: 4, open: 5}),
-        },
-        "8-way_fs": {
-            images: () => useOutdoor.checked ? imagePaths8WayOutdoor : imagePaths8Way,
-            hasOutdoor: true, // Only 8-way has an outdoor variant
-            classes: classesWithPoints(CLASSES["8-way"], {intermediate: 4, open: 5}),
-        },
+        "4-way": {classes: classesWithPoints(CLASSES["4-way"], {beginner: 3, intermediate: 4, open: 5})},
+        "8-way": {classes: classesWithPoints(CLASSES["8-way"], {intermediate: 4, open: 5})},
     };
 
-    function syncPool() {
-        const discipline = DISCIPLINES[divePool.value];
-        outdoorDiv.style.display = discipline.hasOutdoor ? "" : "none";
-        imagePaths = discipline.images();
+    // Rebuilds the image set dropdown when the discipline changes
+    function fillImageSets() {
+        imageSet.innerHTML = IMAGE_SETS[divePool.value].map(set => `<option>${set}</option>`).join("");
+
+        // Default to preferred image set, otherwise fallback to USPA
+        imageSet.value = imageSet.dataset.preferred;
+        if (!imageSet.value) imageSet.value = "USPA";
     }
 
+    function syncPool() {
+        const discipline = divePool.value;
+        const imageFiles = Object.fromEntries([...randoms, ...blocks].map(key => [key, `${imageSet.value}/${key}.webp`]));
+        outdoorDiv.style.display = "none";
+
+        // Only 8-way has a different outdoor and indoor pool
+        if (discipline === "8-way") {
+            outdoorDiv.style.display = "";
+            if (!useOutdoor.checked) Object.assign(imageFiles, INDOOR_IMAGES[imageSet.value]); // Swap-in the indoor images
+        }
+
+        imagePaths = Object.fromEntries(Object.entries(imageFiles).map(([key, file]) => [key, `assets/diagrams/${discipline}/${file}`]));
+    }
+
+    fillImageSets();
     syncPool();
 
+    function indoorSubstituteToast() {
+        if (divePool.value === "8-way" && !useOutdoor.checked && imageSet.value === "USPA") {
+            showToast("USPA (USIS) does not publish indoor diagrams - subbing FAI");
+        }
+    }
+
+    // Switch between indoor and outdoor diagrams
     function changePool() {
         syncPool();
+        indoorSubstituteToast();
 
         // Reload the images
         diveImages.innerHTML = divesAsImages(generatedDives);
+    }
+
+    function changeImageSet() {
+        imageSet.dataset.preferred = imageSet.value;
+        changePool();
     }
 </script>
 <!--Listeners-->
@@ -465,7 +507,7 @@
                 return;
             }
 
-            settings[element.id] = element[stateKey(element)];
+            settings[element.id] = element.dataset.preferred ?? element[stateKey(element)]; // Save preference (not selected fallback)
         });
 
         // Drawer width (unless default)
@@ -552,7 +594,9 @@
     }
 
     function changeDiscipline() {
+        fillImageSets();
         syncPool();
+        indoorSubstituteToast();
         fillClasses();
         changeClass();
     }
@@ -795,11 +839,12 @@
 
         const originalImages = new Map();
         const images = document.querySelectorAll("#diveImages img");
-        const scale = 0.35; // Scale images to 35% (~150 DPI)
+        const maxWidth = 400; // Scale images down to 400px (~150 DPI), instead of scale (to leave low DPI images alone),
 
         // Downscale each image once, then reuse from cache
         await Promise.all(Array.from(images).map(async image => {
             if (!cache.has(image.src)) {
+                const scale = Math.min(1, maxWidth / image.naturalWidth);
                 cache.set(image.src, fetch(image.src)
                     .then(response => response.blob())
                     .then(blob => createImageBitmap(blob, {
@@ -856,6 +901,17 @@
         if (columnsPerPage.selectedOptions[0].disabled) columnsPerPage.value = "auto";
         setColumns(columnsPerPage.value);
     }
+
+    /**
+     * Used for determining the width of images in the column print layout
+     * All images need to be of the same width to look normal when printed
+     * The tallest dive sets the width, as it has to narrow to fit all the points in a single column
+     */
+    diveImages.addEventListener("load", () => {
+        const heightInWidths = (image) => image.naturalHeight / image.naturalWidth || 0; // 0 until loaded
+        const diveHeights = [...diveImages.children].map(dive => [...dive.children].reduce((sum, image) => sum + heightInWidths(image), 0));
+        diveImages.style.setProperty("--tallest-dive-in-widths", Math.max(...diveHeights));
+    }, {capture: true}); // Load events do not bubble up, therefore, wouldn't fire the listener
 
     function setPage() {
         const landscape = layoutColumns.checked; // Columns lie across a landscape page

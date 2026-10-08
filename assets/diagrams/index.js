@@ -12,3 +12,16 @@ const CLASSES = {
         {key: 'open', label: 'Adv. / Open'},
     ],
 };
+
+const IMAGE_SETS = {
+    '4-way': ['Rhythm', 'USPA', 'Axis', 'FAI'],
+    '8-way': ['Rhythm', 'USPA', 'Axis', 'FAI'],
+};
+
+// Only 8-way has a separate indoor pool
+const INDOOR_IMAGES = {
+    Rhythm: {13: 'Rhythm/13_indoor.webp', 17: 'Rhythm/17_indoor.webp', 20: 'Rhythm/20_indoor.webp'},
+    USPA: {13: 'FAI/13_indoor.webp', 17: 'FAI/17_indoor.webp', 20: 'FAI/20_indoor.webp'},
+    Axis: {13: 'Axis/13_indoor.webp', 17: 'Axis/17_indoor.webp', 20: 'Axis/20_indoor.webp'},
+    FAI: {13: 'FAI/13_indoor.webp', 17: 'FAI/17_indoor.webp', 20: 'FAI/20_indoor.webp'},
+};
