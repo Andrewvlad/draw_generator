@@ -63,8 +63,10 @@ const validateDraw = (dives, {
     uniqueTransitions = false,
     useRandoms = true,
     useBlocks = true,
-    classRandoms = randoms,
-    classBlocks = blocks,
+    disciplineRandoms = randoms,
+    disciplineBlocks = blocks,
+    classRandoms = disciplineRandoms,
+    classBlocks = disciplineBlocks,
     classLabel, // Needed for the validation tooltip
 }) => {
     const exits = new Map();
@@ -85,10 +87,10 @@ const validateDraw = (dives, {
 
         const cells = dive.map((point, i) => { // For each point (cell):
             const brokenRule = (curPoints >= minPoints && 'Dive already has too many points') // Point cap first, as resolving it may also solve the other rules
-                || (!randoms.includes(point) && !blocks.includes(point) && 'Invalid formation') // Not in any pool
+                || (!disciplineRandoms.includes(point) && !disciplineBlocks.includes(point) && 'Invalid formation') // Not in any pool
                 || (!classRandoms.includes(point) && !classBlocks.includes(point) && `Not in the ${classLabel} pool`) // If outside of dive pool
-                || (!useRandoms && randoms.includes(point) && 'Randoms are excluded')
-                || (!useBlocks && blocks.includes(point) && 'Blocks are excluded')
+                || (!useRandoms && disciplineRandoms.includes(point) && 'Randoms are excluded')
+                || (!useBlocks && disciplineBlocks.includes(point) && 'Blocks are excluded')
                 || (dive.indexOf(point) !== dive.lastIndexOf(point) && 'Repeated in this dive') // If formation occurs multiple times in the same dive
                 || (uniqueExits && !i && exits.get(point) > 1 && 'Repeated exit') // Check exits
                 || (uniqueTransitions && dive.length > 1 && transitions.get(transitionKey(dive.at(i - 1), point)) > 1 && 'Repeated transition'); // Check transitions
@@ -114,8 +116,10 @@ const main = ({
     uniqueTransitions = false,
     useRandoms = true,
     useBlocks = true,
-    classRandoms = randoms,
-    classBlocks = blocks,
+    disciplineRandoms = randoms,
+    disciplineBlocks = blocks,
+    classRandoms = disciplineRandoms,
+    classBlocks = disciplineBlocks,
 }) => {
     // Fewest formations a dive can use to reach minPoints (used for uniqueTransitions error)
     const minFormations = useBlocks ? Math.ceil(minPoints / 2) : minPoints;
@@ -208,8 +212,10 @@ const fillAroundLocks = ({
     uniqueTransitions = false,
     useRandoms = true,
     useBlocks = true,
-    classRandoms = randoms,
-    classBlocks = blocks,
+    disciplineRandoms = randoms,
+    disciplineBlocks = blocks,
+    classRandoms = disciplineRandoms,
+    classBlocks = disciplineBlocks,
     locked,
 }) => {
     // Fewest formations a dive can use to reach minPoints (used for uniqueTransitions error)

@@ -25,6 +25,12 @@ jobs:
                       assets/diagrams/4-way/*/*.webp
                       assets/diagrams/8-way/index.js
                       assets/diagrams/8-way/*/*.webp
+                      assets/diagrams/16-way/index.js
+                      assets/diagrams/16-way/*/*.webp
+                      assets/diagrams/4-way-vfs/index.js
+                      assets/diagrams/4-way-vfs/*/*.webp
+                      assets/diagrams/2-way-mfs/index.js
+                      assets/diagrams/2-way-mfs/*/*.webp
                   sparse-checkout-cone-mode: false
 
             - name: Sync class rules and image sets
@@ -33,7 +39,7 @@ jobs:
                   const fs = require('fs');
                   const vm = require('vm');
 
-                  const DISCIPLINES = ['4-way', '8-way'];
+                  const DISCIPLINES = ['4-way', '8-way', '16-way', '4-way-vfs', '2-way-mfs'];
 
                   const literal = (value) => Array.isArray(value) ? `[${value.map(literal).join(', ')}]`
                       : typeof value === 'object' ? `{${Object.entries(value).map(([key, item]) => `${key}: ${literal(item)}`).join(', ')}}`

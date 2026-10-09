@@ -36,6 +36,9 @@
                     <select id="divePool" onchange="changeDiscipline()">
                         <option value="4-way">4-way</option>
                         <option value="8-way">8-way</option>
+                        <option value="16-way">16-way</option>
+                        <option value="4-way-vfs">VFS 4-way</option>
+                        <option value="2-way-mfs">MFS 2-way</option>
                     </select>
                 </div>
 
@@ -322,6 +325,10 @@
     const DISCIPLINES = {
         "4-way": {classes: classesWithPoints(CLASSES["4-way"], {beginner: 3, intermediate: 4, open: 5})},
         "8-way": {classes: classesWithPoints(CLASSES["8-way"], {intermediate: 4, open: 5})},
+        // Smaller pool (A - J and 1 - 12), and FSCards only one class
+        "16-way": {randoms: randoms.slice(0, 9), blocks: blocks.slice(0, 12), classes: [{key: "open", label: "Open", points: 3}]},
+        "4-way-vfs": {classes: classesWithPoints(CLASSES["4-way-vfs"], {intermediate: 3, advanced: 4, open: 5})},
+        "2-way-mfs": {classes: classesWithPoints(CLASSES["2-way-mfs"], {intermediate: 3, advanced: 4, open: 5})},
     };
 
     // Rebuilds the image set dropdown when the discipline changes
@@ -335,7 +342,8 @@
 
     function syncPool() {
         const discipline = divePool.value;
-        const imageFiles = Object.fromEntries([...randoms, ...blocks].map(key => [key, `${imageSet.value}/${key}.webp`]));
+        const {randoms: disciplineRandoms = randoms, blocks: disciplineBlocks = blocks} = DISCIPLINES[discipline];
+        const imageFiles = Object.fromEntries([...disciplineRandoms, ...disciplineBlocks].map(key => [key, `${imageSet.value}/${key}.webp`]));
         outdoorDiv.style.display = "none";
 
         // Only 8-way has a different outdoor and indoor pool
@@ -534,6 +542,7 @@
 
     function drawSettings() {
         const include = includeSegment.querySelector(":checked").value;
+        const discipline = DISCIPLINES[divePool.value];
         const diveClass = selectedClass();
 
         return {
@@ -543,6 +552,8 @@
             uniqueTransitions: uniqueTransitions.checked,
             useRandoms: include !== "blocks",
             useBlocks: include !== "randoms",
+            disciplineRandoms: discipline.randoms,
+            disciplineBlocks: discipline.blocks,
             classRandoms: diveClass.randoms,
             classBlocks: diveClass.blocks,
             classLabel: diveClass.label,
@@ -565,11 +576,16 @@
         classDiscipline.value = previousClass;
         // If the selected class does not belong to the discipline, find the closest based on selected points
         if (!classDiscipline.value) selectClassFor(minPoints.value);
+
+        // Hide the class row and the point link when only 1 class (16-way)
+        classDiscipline.parentElement.style.display = classPointLink.style.display = classList().length > 1 ? "" : "none";
     }
 
-    // Select the class that matches the selected points, otherwise switch the class (and therefore points) to the class with the fewest points
+    // Match the class to the selected points. If no match, find the next highest class. Finally, fallback to the highest/only class.
+    // This will cascade update the points field.
     function selectClassFor(points) {
-        classDiscipline.value = classList().find(diveClass => diveClass.points >= points).key;
+        const classes = classList();
+        classDiscipline.value = (classes.find(diveClass => diveClass.points >= points) ?? classes.at(-1)).key;
     }
 
     // Point selections that don't belong to the class (e.x. 3 - 4 in 8-way) show invalid when selected
