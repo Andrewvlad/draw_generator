@@ -1053,6 +1053,7 @@ footer {
 
 /* We are re-using the same page for printing, instead of re-loading all of the images */
 @media print {
+    /* Print requires whole pixels (no floats) to render consistently */
     @page {
         margin: 0;
         size: auto; /* Use the target paper size (Letter, A4, etc.) instead of forcing Letter */
@@ -1144,12 +1145,13 @@ footer {
 
     /* Columns layout: each dive is a column across a landscape page */
     body:has(#layout-columns:checked) {
-        /* Multicol draws dividers only between filled columns, and flows the columns past a page's last onto the next */
         #diveImages {
+            --bracket-margin: 6px;
             columns: var(--columns);
             column-fill: auto;
-            column-gap: 3px; /* Clears the 1px rule by 1px each side, or full-width images' white backgrounds paint over */
-            column-rule: 1px solid black;
+            /* If using a rule instead of a bracket, 3px is the minimum column-gap to clear a 1px rule by 1px each side, otherwise full-width images' white backgrounds paint over */
+            column-gap: var(--bracket-margin);
+            padding-inline: var(--bracket-margin) !important; /* Pad the brackets away from the page's edge */
         }
 
         /* Each dive is --page-height tall */
@@ -1177,14 +1179,34 @@ footer {
         }
 
         /* Every image shares the same width, determined by the tallest dive */
+        /* A bracket on each side makes the formations visually distinct */
         #diveImages > div > img {
+            --bracket-arm-length: 7px;
+            --bracket-stroke: 1px;
             order: 1; /* Below the ::after (draw) */
 
             /* Deconstruction of max-width based off of max-height, and the heightInWidths ratio of the tallest dive */
             /* Defining max-width in this way defines max-height */
-            max-width: min(100%, (var(--dive-height) - 8px - 40px - 1.5 * var(--draw-size)) / var(--tallest-dive-in-widths)) !important; /* max-height = counter's margin + 40px counter + the written text draw */
-            /*max-height: calc((100% - 8px - 40px - 1.5 * var(--draw-size)) / var(--images-per-dive));*/
-            max-height: none !important; /* Override preview's 300px cap */
+            max-width: min(100%,
+                /* max-height = page height - counter's margin - 40px counter - (1.5 line height * written text draw) - gap below last bracket - images per dive * (margin-top + top/bottom padding (defined below)) */
+                (var(--dive-height) - 8px - 40px - (1.5 * var(--draw-size)) - var(--bracket-margin) - var(--images-per-dive) * (var(--bracket-margin) + 4px))
+                / var(--tallest-dive-in-widths) /* image width so that the tallest dive's images exactly fill max-height */
+                + 4px /* left/right padding (defined below) */
+            ) !important;
+            max-height: none !important; /* Overrides preview's 300px cap */
+            margin-top: var(--bracket-margin);
+            padding: 2px; /* 2px padding so the bracket wraps/hold the images */
+            background:
+                linear-gradient(black, black) left top / var(--bracket-stroke) 100%,
+                linear-gradient(black, black) left top / var(--bracket-arm-length) var(--bracket-stroke),
+                linear-gradient(black, black) left bottom / var(--bracket-arm-length) var(--bracket-stroke),
+                linear-gradient(black, black) right top / var(--bracket-stroke) 100%,
+                linear-gradient(black, black) right top / var(--bracket-arm-length) var(--bracket-stroke),
+                linear-gradient(black, black) right bottom / var(--bracket-arm-length) var(--bracket-stroke);
+            background-repeat: no-repeat;
+            /* Print the brackets even with background graphics off */
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
         }
     }
 }
