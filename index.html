@@ -592,7 +592,7 @@
     function markPoints() {
         const diveClass = selectedClass();
         const expected = minPoints.querySelector(`[value="${diveClass.points}"]`);
-        const message = !linked() || expected.selected ? "" : `${divePool.selectedOptions[0].text} ${diveClass.label} expects ${expected.text} points`;
+        const message = expected.selected ? "" : `${divePool.selectedOptions[0].text} ${diveClass.label} expects ${expected.text} points`;
         minPoints.setCustomValidity(message); // Mark as invalid
         minPoints.title = message;
     }
@@ -619,8 +619,7 @@
 
     classPointLink.addEventListener("click", () => {
         classPointLink.ariaPressed = !linked();
-        // TODO: Consider force-updating the points value when toggled on
-        markPoints(); // Linking does not forcibly replace the points value, so validation must be ran
+        if (linked()) changeClass(minPoints.value); // Points updated to match class
     });
 
     fillClasses();
